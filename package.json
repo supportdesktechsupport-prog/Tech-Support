@@ -1,0 +1,17 @@
+{
+  "name": "tech-support-backend",
+  "version": "1.0.0",
+  "description": "Tech Support Lifetime Free Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "better-sqlite3": "^9.4.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
