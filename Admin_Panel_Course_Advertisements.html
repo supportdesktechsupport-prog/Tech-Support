@@ -1,0 +1,5828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TECH SUPPORT — Admin Panel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#080808;
+  --panel:#111;
+  --panel2:#161616;
+  --border:#292929;
+  --red:#e50914;
+  --red2:#ff2633;
+  --text:#f5f5f5;
+  --muted:#9b9b9b;
+  --green:#20c77a;
+  --yellow:#f0b429;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+.login-screen{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:25px;
+  background:
+    radial-gradient(circle at 50% 20%,rgba(229,9,20,.18),transparent 35%),
+    #080808;
+}
+.login-box{
+  width:min(430px,100%);
+  background:#111;
+  border:1px solid #303030;
+  border-top:3px solid var(--red);
+  border-radius:18px;
+  padding:35px;
+  box-shadow:0 25px 80px #000;
+}
+.brand{
+  text-align:center;
+  margin-bottom:30px;
+}
+.brand-logo{
+  width:78px;height:78px;
+  object-fit:contain;
+  border-radius:15px;
+  background:#181818;
+  border:1px solid #333;
+  margin:auto;
+  display:block;
+}
+.brand h1{
+  margin:16px 0 5px;
+  font-size:27px;
+  letter-spacing:2px;
+}
+.brand p{color:var(--muted);margin:0}
+
+.form-group{margin-bottom:18px}
+label{
+  display:block;
+  font-size:13px;
+  color:#bbb;
+  margin-bottom:7px;
+}
+input,select,textarea{
+  width:100%;
+  background:#0b0b0b;
+  border:1px solid #303030;
+  color:#fff;
+  border-radius:9px;
+  padding:12px 13px;
+  outline:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 2px rgba(229,9,20,.12);
+}
+textarea{min-height:100px;resize:vertical}
+
+.primary{
+  width:100%;
+  border:0;
+  padding:13px 18px;
+  border-radius:9px;
+  background:var(--red);
+  color:#fff;
+  font-weight:700;
+}
+.primary:hover{background:var(--red2)}
+.secondary{
+  border:1px solid #3a3a3a;
+  background:#181818;
+  color:#fff;
+  padding:10px 15px;
+  border-radius:8px;
+}
+.danger{
+  background:#35080b;
+  border:1px solid #791017;
+  color:#ff5963;
+  padding:9px 13px;
+  border-radius:7px;
+}
+.success{
+  background:#09271c;
+  border:1px solid #155d40;
+  color:#51e6a4;
+  padding:9px 13px;
+  border-radius:7px;
+}
+.msg{
+  margin-top:15px;
+  padding:11px;
+  border-radius:8px;
+  display:none;
+  font-size:13px;
+}
+.msg.error{display:block;background:#30090c;color:#ff6d76}
+.msg.ok{display:block;background:#09271c;color:#55e7a7}
+
+.app{display:none;min-height:100vh}
+.sidebar{
+  position:fixed;
+  left:0;top:0;bottom:0;
+  width:255px;
+  background:#0d0d0d;
+  border-right:1px solid #272727;
+  z-index:20;
+  overflow-y:auto;
+}
+.side-brand{
+  padding:24px 20px;
+  border-bottom:1px solid #252525;
+}
+.side-brand strong{
+  color:#fff;
+  font-size:19px;
+  letter-spacing:2px;
+}
+.side-brand small{
+  display:block;
+  color:var(--red);
+  margin-top:5px;
+}
+.nav{padding:14px}
+.nav button{
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent;
+  color:#aaa;
+  padding:12px 14px;
+  border-radius:8px;
+  margin-bottom:4px;
+}
+.nav button:hover,
+.nav button.active{
+  background:#22090b;
+  color:#fff;
+  border-left:3px solid var(--red);
+}
+.nav-title{
+  color:#555;
+  font-size:10px;
+  letter-spacing:1.5px;
+  margin:18px 12px 8px;
+}
+.logout{
+  color:#ff5862!important;
+}
+
+.main{
+  margin-left:255px;
+  min-height:100vh;
+}
+.topbar{
+  height:70px;
+  border-bottom:1px solid #242424;
+  background:#0b0b0b;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  position:sticky;
+  top:0;
+  z-index:15;
+}
+.top-title{font-size:18px;font-weight:700}
+.admin-info{color:#aaa;font-size:13px}
+.admin-info b{color:#fff}
+
+.content{padding:28px}
+.section{display:none}
+.section.active{display:block}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:20px;
+  margin-bottom:25px;
+}
+.section-head h2{margin:0 0 6px}
+.section-head p{margin:0;color:#888}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+  margin-bottom:25px;
+}
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:19px;
+}
+.card-label{
+  color:#888;
+  font-size:12px;
+}
+.card-value{
+  font-size:28px;
+  font-weight:800;
+  margin-top:8px;
+}
+.red-value{color:var(--red)}
+.green-value{color:var(--green)}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:20px;
+  margin-bottom:20px;
+}
+.panel h3{margin-top:0}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:15px;
+}
+.full{grid-column:1/-1}
+
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:15px;
+}
+.toolbar input,.toolbar select{max-width:240px}
+
+.table-wrap{
+  overflow:auto;
+  border:1px solid #292929;
+  border-radius:10px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:800px;
+}
+th,td{
+  padding:12px;
+  border-bottom:1px solid #252525;
+  text-align:left;
+  font-size:13px;
+  white-space:nowrap;
+}
+th{
+  background:#171717;
+  color:#aaa;
+  font-size:11px;
+  text-transform:uppercase;
+}
+td{color:#ddd}
+tr:hover td{background:#151515}
+
+.badge{
+  display:inline-block;
+  padding:5px 8px;
+  border-radius:20px;
+  font-size:11px;
+  background:#252525;
+}
+.badge.green{background:#09271c;color:#55e7a7}
+.badge.red{background:#30090c;color:#ff6972}
+.badge.yellow{background:#33290c;color:#f3c653}
+
+.actions{display:flex;gap:6px}
+.actions button{white-space:nowrap}
+
+.upload-box{
+  border:1px dashed #444;
+  border-radius:12px;
+  padding:25px;
+  text-align:center;
+  background:#0c0c0c;
+}
+.preview{
+  width:140px;
+  height:100px;
+  object-fit:contain;
+  background:#151515;
+  border-radius:10px;
+  margin:10px auto;
+  display:block;
+}
+.empty{
+  padding:35px;
+  text-align:center;
+  color:#777;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:100;
+}
+.modal.open{display:flex}
+.modal-box{
+  width:min(800px,100%);
+  max-height:90vh;
+  overflow:auto;
+  background:#121212;
+  border:1px solid #363636;
+  border-top:3px solid var(--red);
+  border-radius:14px;
+  padding:24px;
+}
+.modal-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+.close{
+  border:0;
+  background:#222;
+  color:#fff;
+  border-radius:7px;
+  padding:8px 12px;
+}
+
+.toast{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:200;
+  background:#151515;
+  border:1px solid #444;
+  border-left:4px solid var(--red);
+  color:#fff;
+  padding:14px 18px;
+  border-radius:9px;
+  display:none;
+  max-width:360px;
+}
+.toast.show{display:block}
+
+
+/* =====================================================
+   MARKING SETTINGS
+===================================================== */
+.ts-marking-card{
+  border:1px solid #303030;
+  border-radius:12px;
+  padding:16px;
+  background:#0d0d0d;
+  margin-bottom:16px;
+}
+.ts-marking-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:12px;
+}
+.ts-marking-title{font-weight:800;font-size:15px}
+.ts-marking-sub{color:#888;font-size:12px;margin-top:4px}
+.ts-switch{
+  position:relative;
+  width:52px;
+  height:28px;
+  flex:0 0 auto;
+}
+.ts-switch input{
+  opacity:0;
+  width:0;
+  height:0;
+  position:absolute;
+}
+.ts-slider{
+  position:absolute;
+  inset:0;
+  background:#2b2b2b;
+  border:1px solid #444;
+  border-radius:999px;
+  transition:.2s;
+}
+.ts-slider:before{
+  content:"";
+  position:absolute;
+  width:20px;height:20px;
+  left:3px;top:3px;
+  border-radius:50%;
+  background:#aaa;
+  transition:.2s;
+}
+.ts-switch input:checked + .ts-slider{
+  background:#09271c;
+  border-color:#155d40;
+}
+.ts-switch input:checked + .ts-slider:before{
+  transform:translateX(24px);
+  background:#51e6a4;
+}
+.ts-marking-state{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  font-size:11px;
+  font-weight:800;
+  padding:5px 9px;
+  border-radius:20px;
+  background:#252525;
+  color:#aaa;
+}
+.ts-marking-state.on{
+  background:#09271c;
+  color:#55e7a7;
+}
+.ts-marking-settings{
+  width:min(560px,100%);
+}
+.ts-marking-warning{
+  background:#2a2008;
+  border:1px solid #6a5312;
+  color:#f3c653;
+  padding:11px 12px;
+  border-radius:9px;
+  font-size:12px;
+  line-height:1.55;
+  margin-bottom:16px;
+}
+.ts-marking-preview{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+  margin-top:14px;
+}
+.ts-marking-preview div{
+  background:#171717;
+  border:1px solid #292929;
+  border-radius:9px;
+  padding:11px;
+}
+.ts-marking-preview b{display:block;font-size:13px}
+.ts-marking-preview small{color:#777;display:block;margin-top:4px}
+.ts-setting-save{
+  display:flex;
+  gap:9px;
+  align-items:center;
+  justify-content:flex-end;
+  margin-top:18px;
+}
+@media(max-width:600px){
+  .ts-marking-preview{grid-template-columns:1fr}
+}
+
+@media(max-width:850px){
+  .sidebar{
+    width:70px;
+  }
+  .side-brand strong,
+  .side-brand small,
+  .nav span,
+  .nav-title{display:none}
+  .nav button{text-align:center}
+  .main{margin-left:70px}
+  .grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+}
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  // TECH SUPPORT logo fallback loader.
+  // It searches common branding/site-assets filenames and also falls back
+  // to any image found in those public buckets.
+  window.TS_LOGO_URL = window.TS_LOGO_URL || "";
+
+  window.loadTechSupportLogo = async function () {
+    const urls = [
+      "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/branding/tech-support-logo.png",
+      "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/branding/TECH-SUPPORT-LOGO.png",
+      "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/branding/logo.png",
+      "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/branding/TECH%20SUPPORT%20LOGO.png",
+      "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/site-assets/tech-support-logo.png",
+      "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/site-assets/TECH-SUPPORT-LOGO.png",
+      "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/site-assets/logo.png"
+    ];
+
+    function apply(url) {
+      if (!url) return;
+      window.TS_LOGO_URL = url;
+      document.querySelectorAll(
+        'img[data-tech-support-logo], #techSupportLogo, .tech-support-logo, .brand-logo'
+      ).forEach(function(img) {
+        img.src = url;
+        img.style.display = "";
+      });
+    }
+
+    for (const url of urls) {
+      try {
+        const ok = await new Promise(resolve => {
+          const im = new Image();
+          im.onload = () => resolve(true);
+          im.onerror = () => resolve(false);
+          im.src = url + (url.includes("?") ? "&" : "?") + "_ts=" + Date.now();
+        });
+        if (ok) { apply(url); return url; }
+      } catch (_) {}
+    }
+
+    // If the known filenames don't exist, query public bucket object lists.
+    try {
+      const bases = [
+        "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/list/branding"
+      ];
+      for (const base of bases) {
+        const r = await fetch(base, {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({prefix:"", limit:100})
+        });
+        if (!r.ok) continue;
+        const items = await r.json();
+        for (const item of (Array.isArray(items) ? items : [])) {
+          const n = String(item.name || "");
+          if (/\.(png|jpe?g|webp|svg)$/i.test(n) &&
+              /(logo|tech|support|brand)/i.test(n)) {
+            const bucket = base.endsWith("/branding") ? "branding" : "site-assets";
+            const u = "https://dehgjivefnaeeikrnavc.supabase.co/storage/v1/object/public/"
+                    + bucket + "/" + encodeURIComponent(n);
+            const ok = await new Promise(resolve => {
+              const im = new Image();
+              im.onload = () => resolve(true);
+              im.onerror = () => resolve(false);
+              im.src = u;
+            });
+            if (ok) { apply(u); return u; }
+          }
+        }
+      }
+    } catch (_) {}
+
+    return "";
+  };
+
+  document.addEventListener("DOMContentLoaded", function () {
+    window.loadTechSupportLogo();
+  });
+})();
+</script>
+
+
+<style>
+.tech-support-logo-wrap{font-family:Arial,sans-serif;z-index:9999}
+.tech-support-logo-wrap img[data-tech-support-logo]{background:transparent}
+</style>
+
+<style>
+.ts-rich-editor{min-height:150px;background:#0b0b0b;border:1px solid #303030;color:#fff;border-radius:9px;padding:12px;line-height:1.6;outline:none}.ts-rich-editor:empty:before{content:attr(data-placeholder);color:#666}.ts-editor-toolbar{display:flex;gap:6px;margin-bottom:7px;flex-wrap:wrap}.ts-editor-toolbar button{width:auto!important;padding:8px 12px}.ts-admin-doc{background:#fff;color:#111;padding:28px;border:3px solid #1769aa;border-radius:14px;min-height:520px}.ts-admin-doc h2,.ts-admin-doc h3{text-align:center}.ts-admin-doc-photo{width:120px;height:140px;object-fit:cover;display:block;margin:0 auto 15px;border:2px solid #1769aa}.ts-admin-idcard{display:flex;gap:20px;align-items:center;background:#fff;color:#111;border:3px solid #1769aa;border-radius:18px;padding:24px}.ts-admin-idcard img{width:130px;height:155px;object-fit:cover;border-radius:10px}.ts-admin-idcard h2{color:#1769aa}.ts-thanks-overlay{position:fixed;inset:0}.ts-fireworks{position:absolute;inset:0;overflow:hidden;background:radial-gradient(circle at center,#111 0,#000 80%);z-index:1}.ts-fireworks span{position:absolute;left:50%;top:50%;font-size:30px;animation:tsBurst 1.4s ease-out infinite;animation-delay:calc(var(--i)*.08s);transform:rotate(calc(var(--i)*20deg)) translateY(-20px);color:#fff}.ts-flowers{position:relative;z-index:3;text-align:center;margin-top:34vh;font-size:48px;animation:tsFloat 1s ease-in-out infinite alternate}.ts-thank-title,.ts-thank-sub{position:relative;z-index:3;text-align:center;color:#fff;font-weight:900;text-shadow:0 3px 18px #000}.ts-thank-title{font-size:clamp(28px,6vw,60px);margin-top:20px}.ts-thank-sub{font-size:clamp(22px,4vw,40px);margin-top:8px}@keyframes tsBurst{0%{opacity:0;transform:rotate(calc(var(--i)*20deg)) translateY(0) scale(.2)}45%{opacity:1}100%{opacity:0;transform:rotate(calc(var(--i)*20deg)) translateY(-220px) scale(1.2)}}@keyframes tsFloat{to{transform:translateY(-8px)}}
+#tsThankYouOverlay{position:fixed;inset:0;z-index:999999;background:#000;overflow:hidden}
+</style>
+<style id="ts-video-admin-css">.ts-admin-video-grid{grid-template-columns:minmax(320px,420px) 1fr}.ts-video-admin-table{width:100%;border-collapse:collapse}.ts-video-admin-table th,.ts-video-admin-table td{padding:10px;border-bottom:1px solid #292929;text-align:left;vertical-align:top}.ts-video-admin-table th{color:#888;font-size:11px;text-transform:uppercase}.ts-admin-video-actions{display:flex;gap:6px;flex-wrap:wrap}.ts-admin-video-actions button{width:auto!important}.ts-video-status{font-size:10px;font-weight:900;padding:5px 8px;border-radius:20px;background:#242424;color:#ddd}.ts-video-status.published{color:#72e6a9}.ts-video-status.draft{color:#f2c66d}.ts-video-status.archived{color:#999}.ts-engage-card{border:1px solid #292929;border-radius:10px;padding:13px;margin-top:10px;background:#101010}.ts-engage-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.ts-admin-comment{padding:9px 0;border-top:1px solid #292929;color:#ddd;font-size:12px}.ts-admin-comment small{display:block;color:#777;margin-top:4px}@media(max-width:900px){.ts-admin-video-grid{grid-template-columns:1fr}}</style>
+
+<style id="ts-video-admin-polish">
+.ts-video-admin-table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border:1px solid #2a2a2a;border-radius:14px;background:#101010}.ts-video-admin-table th{background:#171717;color:#aaa;text-align:left;font-size:11px;padding:12px;border-bottom:1px solid #2a2a2a}.ts-video-admin-table td{padding:13px 12px;border-bottom:1px solid #222;color:#ddd;vertical-align:top}.ts-video-admin-table tr:last-child td{border-bottom:0}.ts-video-admin-table tr:hover td{background:#141414}.ts-video-status{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:900;text-transform:uppercase}.ts-video-status.published{background:#103c2a;color:#65e6a6}.ts-video-status.draft{background:#332b12;color:#f1cf6b}.ts-video-status.archived{background:#272727;color:#aaa}.ts-admin-video-actions{display:flex;gap:6px;flex-wrap:wrap}.ts-admin-video-actions button{white-space:nowrap}.ts-video-thumb-mini{width:100px;height:56px;object-fit:cover;border-radius:8px;background:#050505;border:1px solid #292929;display:block;margin-bottom:7px}.ts-engage-card{background:#111;border:1px solid #292929;border-radius:13px;padding:14px;margin-top:10px;color:#ddd}.ts-engage-head{display:flex;gap:20px;flex-wrap:wrap}.ts-admin-comment{padding:10px 0;border-bottom:1px solid #222}.ts-admin-comment:last-child{border-bottom:0}.ts-admin-comment small{display:block;color:#777;margin-top:4px}
+</style>
+
+</head>
+
+<body>
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <div class="brand">
+      <img id="loginLogo" class="brand-logo" alt="TECH SUPPORT" onerror="this.style.display='none';">
+      <h1>TECH SUPPORT</h1>
+      <p>Administrator Control Center</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Admin Email / Username</label>
+        <input id="loginEmail" type="text" required
+               placeholder="Enter admin email">
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input id="loginPassword" type="password" required
+               placeholder="Enter password">
+      </div>
+
+      <button class="primary" type="submit">SECURE LOGIN</button>
+      <div id="loginMsg" class="msg"></div>
+    </form>
+
+    <div style="margin-top:18px;text-align:center">
+      <button id="forgotBtn" class="secondary">
+        Forgot Password?
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     APP
+===================================================== -->
+<div id="app" class="app">
+
+<aside class="sidebar">
+  <div class="side-brand">
+    <strong>TECH SUPPORT</strong>
+    <small>ADMIN CONTROL</small>
+  </div>
+
+  <div class="nav">
+
+    <div class="nav-title">MAIN</div>
+
+    <button class="active" data-section="dashboard">
+      <span>▣ Dashboard</span>
+    </button>
+
+    <button data-section="students">
+      <span>◉ Students</span>
+    </button>
+
+    <button data-section="registrations">
+      <span>▤ Registrations</span>
+    </button>
+
+    <div class="nav-title">ACADEMIC</div>
+
+    <button data-section="materials">
+      <span>▥ Study Material</span>
+    </button>
+
+    <button data-section="quiz">
+      <span>✓ Quiz Management</span>
+    </button>
+
+    <button data-section="special">
+      <span>◆ Special Tests</span>
+    </button>
+
+    <button data-section="videos">
+      <span>▶ Video Management</span>
+    </button>
+
+    <button data-section="course-ads">
+      <span>🎞 Course Advertisements</span>
+    </button>
+
+    <button data-section="results">
+      <span>▤ Results</span>
+    </button>
+
+    <div class="nav-title">COMMUNICATION</div>
+
+    <button data-section="notices">
+      <span>▰ Notices</span>
+    </button>
+
+    <button data-section="queries">
+      <span>✉ Support Queries</span>
+    </button>
+
+    <button data-section="sonpal-chat">
+      <span>💬 Chat With Students</span>
+      <span id="tsAdminChatBadge" class="ts-admin-chat-badge hidden">0</span>
+    </button>
+
+    <div class="nav-title">SYSTEM</div>
+
+    <button data-section="branding">
+      <span>◈ Branding</span>
+    </button>
+
+    <button data-section="files">
+      <span>▧ File Manager</span>
+    </button>
+
+    <button data-section="activity">
+      <span>◌ Activity</span>
+    </button>
+
+    <button data-section="analytics">
+      <span>◫ Analytics</span>
+    </button>
+
+
+    <button data-section="settings">
+      <span>⚙ Settings</span>
+    </button>
+
+    <button id="logoutBtn" class="logout">
+      <span>↪ Logout</span>
+    </button>
+
+  </div>
+</aside>
+
+<main class="main">
+
+<header class="topbar">
+  <div class="top-title" id="pageTitle">Dashboard</div>
+  <div class="admin-info">
+    Logged in as <b id="adminName">Admin</b>
+  </div>
+</header>
+
+<div class="content">
+
+<!-- =====================================================
+     ANALYTICS
+===================================================== -->
+<section id="analytics" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Analytics & Engagement</h2>
+    <p>TECH SUPPORT website, student and test engagement overview</p>
+  </div>
+  <button class="secondary" onclick="loadAnalytics()">↻ Refresh</button>
+</div>
+
+<div class="cards">
+  <div class="card"><div class="card-label">TOTAL VISITS</div><div id="aTotalVisits" class="card-value red-value">—</div></div>
+  <div class="card"><div class="card-label">UNIQUE VISITORS</div><div id="aUniqueVisitors" class="card-value">—</div></div>
+  <div class="card"><div class="card-label">TODAY VISITS</div><div id="aTodayVisits" class="card-value">—</div></div>
+  <div class="card"><div class="card-label">7 DAYS VISITS</div><div id="a7Visits" class="card-value">—</div></div>
+  <div class="card"><div class="card-label">30 DAYS VISITS</div><div id="a30Visits" class="card-value">—</div></div>
+  <div class="card"><div class="card-label">REGISTERED STUDENTS</div><div id="aStudents" class="card-value">—</div></div>
+  <div class="card"><div class="card-label">TEST ATTEMPTS</div><div id="aAttempts" class="card-value">—</div></div>
+  <div class="card"><div class="card-label">STUDENTS ATTEMPTED</div><div id="aAttemptedStudents" class="card-value">—</div></div>
+  <div class="card"><div class="card-label">NO TEST ATTEMPT</div><div id="aNoTest" class="card-value">—</div></div>
+</div>
+
+<div class="panel">
+  <h3>Student Engagement</h3>
+  <div id="analyticsEngagement"><div class="empty">Analytics load हो रही है...</div></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
+<section id="dashboard" class="section active">
+
+<div class="section-head">
+  <div>
+    <h2>Dashboard</h2>
+    <p>TECH SUPPORT student system overview</p>
+  </div>
+  <button class="secondary" onclick="loadDashboard()">↻ Refresh</button>
+</div>
+
+<div class="cards">
+  <div class="card">
+    <div class="card-label">TOTAL STUDENTS</div>
+    <div id="dTotalStudents" class="card-value red-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">CLASS 9TH</div>
+    <div id="dClass9" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">CLASS 10TH</div>
+    <div id="dClass10" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">CLASS 11TH</div>
+    <div id="dClass11" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">CLASS 12TH</div>
+    <div id="dClass12" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">ARTS</div>
+    <div id="dArts" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">SCIENCE</div>
+    <div id="dScience" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">COMMERCE</div>
+    <div id="dCommerce" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">ACTIVE STUDENTS</div>
+    <div id="dActive" class="card-value green-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">QUIZZES</div>
+    <div id="dQuiz" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">SPECIAL TESTS</div>
+    <div id="dSpecial" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">PENDING RESULTS</div>
+    <div id="dPending" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">MATERIALS</div>
+    <div id="dMaterials" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">NOTICES</div>
+    <div id="dNotices" class="card-value">—</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">PENDING QUERIES</div>
+    <div id="dQueries" class="card-value">—</div>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>System Status</h3>
+  <div id="systemStatus" style="color:#888">
+    Checking database connection...
+  </div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     STUDENTS
+===================================================== -->
+<section id="students" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Student Management</h2>
+    <p>Manage registered students</p>
+  </div>
+  <button class="secondary" onclick="loadStudents()">↻ Refresh</button>
+</div>
+
+<div class="panel">
+
+<div class="toolbar">
+  <input id="studentSearch"
+         placeholder="Search ID / Name / Mobile..."
+         oninput="renderStudents()">
+
+  <select id="studentClassFilter" onchange="renderStudents()">
+    <option value="">All Classes</option>
+    <option value="9th">9th</option>
+    <option value="10th">10th</option>
+    <option value="11th">11th</option>
+    <option value="12th">12th</option>
+  </select>
+
+  <select id="studentStreamFilter" onchange="renderStudents()">
+    <option value="">All Streams</option>
+    <option value="Arts">Arts</option>
+    <option value="Science">Science</option>
+    <option value="Commerce">Commerce</option>
+  </select>
+</div>
+
+<div id="studentsTable"></div>
+
+</div>
+</section>
+
+<!-- =====================================================
+     REGISTRATIONS
+===================================================== -->
+<section id="registrations" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Registration Management</h2>
+    <p>Student registration records</p>
+  </div>
+</div>
+
+<div class="panel">
+  <div id="registrationTable"></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     MATERIALS
+===================================================== -->
+<section id="materials" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Study Material Management</h2>
+    <p>Class and stream based educational content</p>
+  </div>
+</div>
+
+<div class="panel">
+
+<form id="materialForm">
+
+<div class="grid">
+
+<div>
+<label>Material Title *</label>
+<input id="materialTitle" required>
+</div>
+
+<div>
+<label>Subject *</label>
+<input id="materialSubject" required>
+</div>
+
+<div>
+<label>Class *</label>
+<select id="materialClass" required>
+<option value="">Select Class</option>
+<option>9th</option>
+<option>10th</option>
+<option>11th</option>
+<option>12th</option>
+</select>
+</div>
+
+<div id="materialStreamWrap">
+<label>Stream *</label>
+<select id="materialStream" required>
+<option value="">Select Stream</option>
+<option>Arts</option>
+<option>Science</option>
+<option>Commerce</option>
+</select>
+</div>
+
+<div>
+<label>Material Type *</label>
+<select id="materialType" required>
+<option value="PDF">PDF</option>
+<option value="Image">Image</option>
+<option value="Text">Text</option>
+<option value="Link">External Link</option>
+</select>
+</div>
+
+<div id="materialDownloadModeWrap">
+<label>PDF Access *</label>
+<select id="materialDownloadMode">
+<option value="downloadable">Downloadable — Student can download</option>
+<option value="non_downloadable">Non-Downloadable — App में ही खुलेगी</option>
+</select>
+</div>
+
+<div>
+<label>Chapter / Topic</label>
+<input id="materialTopic">
+</div>
+
+<div class="full">
+<label>Description</label>
+<textarea id="materialDescription"></textarea>
+</div>
+
+<div class="full">
+<label>File</label>
+<input id="materialFile" type="file">
+<small id="materialFileHelp" style="display:block;color:#888;margin-top:6px">
+PDF के लिए Downloadable या Non-Downloadable access चुनें।
+</small>
+</div>
+
+<div class="full">
+<label>External URL (optional)</label>
+<input id="materialUrl" type="url"
+       placeholder="https://...">
+</div>
+
+</div>
+
+<button class="primary" style="margin-top:15px;width:auto"
+        type="submit">
+ADD STUDY MATERIAL
+</button>
+
+<div id="materialMsg" class="msg"></div>
+
+</form>
+</div>
+
+<div class="panel">
+<h3>Existing Materials</h3>
+<div id="materialsTable"></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     QUIZ
+===================================================== -->
+<section id="quiz" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Quiz Management</h2>
+    <p>Create class and stream based instant-result quizzes</p>
+  </div>
+  <button class="secondary" onclick="loadQuizzes()">↻ Refresh</button>
+</div>
+
+<div class="panel">
+
+<form id="quizForm">
+
+<div class="grid">
+
+<div>
+<label>Quiz Name *</label>
+<input id="quizTitle" required>
+</div>
+
+<div>
+<label>Subject</label>
+<input id="quizSubject">
+</div>
+
+<div>
+<label>Class</label>
+<select id="quizClass">
+<option value="All">All Classes</option>
+<option>9th</option>
+<option>10th</option>
+<option>11th</option>
+<option>12th</option>
+</select>
+</div>
+
+<div>
+<label>Stream</label>
+<select id="quizStream">
+<option value="All">All</option>
+<option>Arts</option>
+<option>Science</option>
+<option>Commerce</option>
+</select>
+</div>
+
+<div>
+<label>Duration (minutes)</label>
+<input id="quizDuration" type="number" value="30" min="1">
+</div>
+
+<div class="full">
+<label>Description</label>
+<textarea id="quizDescription"></textarea>
+</div>
+
+</div>
+
+<button class="primary" style="width:auto" type="submit">
+CREATE QUIZ
+</button>
+
+<div id="quizMsg" class="msg"></div>
+
+</form>
+
+</div>
+
+<div class="panel">
+<h3>Quiz List</h3>
+<div id="quizTable"></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     SPECIAL TEST
+===================================================== -->
+<section id="special" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Special Test Management</h2>
+    <p>Scheduled examination control center</p>
+  </div>
+  <button class="secondary" onclick="loadSpecialTests()">↻ Refresh</button>
+</div>
+
+<div class="panel">
+
+<form id="specialForm">
+
+<div class="grid">
+
+<div>
+<label>Test Name *</label>
+<input id="specialTitle" required>
+</div>
+
+<div>
+<label>Subject</label>
+<input id="specialSubject">
+</div>
+
+<div>
+<label>Class *</label>
+<select id="specialClass" required>
+<option value="">Select Class</option>
+<option>9th</option>
+<option>10th</option>
+<option>11th</option>
+<option>12th</option>
+</select>
+</div>
+
+<div>
+<label>Stream</label>
+<select id="specialStream">
+<option value="">Select Stream</option>
+<option>Arts</option>
+<option>Science</option>
+<option>Commerce</option>
+</select>
+</div>
+
+<div>
+<label>Starting Date *</label>
+<input id="specialStartDate" type="date" required>
+</div>
+
+<div>
+<label>Starting Time *</label>
+<input id="specialStartTime" type="time" required>
+</div>
+
+<div>
+<label>Ending Date *</label>
+<input id="specialEndDate" type="date" required>
+</div>
+
+<div>
+<label>Ending Time *</label>
+<input id="specialEndTime" type="time" required>
+</div>
+
+<div>
+<label>Duration Minutes</label>
+<input id="specialDuration" type="number" min="1">
+</div>
+
+<div class="full">
+<label>Instructions</label>
+<textarea id="specialInstructions"></textarea>
+</div>
+
+</div>
+
+<button class="primary" style="width:auto" type="submit">
+CREATE SPECIAL TEST
+</button>
+
+<div id="specialMsg" class="msg"></div>
+
+</form>
+</div>
+
+<div class="panel">
+<h3>Special Tests</h3>
+<div id="specialTable"></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     RESULTS
+===================================================== -->
+<section id="videos" class="section">
+<div class="section-head"><div><h2>Video Management</h2><p>Upload, publish and monitor TECH SUPPORT videos</p></div><button class="secondary" onclick="loadAdminVideos()">↻ Refresh</button></div>
+<div class="grid ts-admin-video-grid"><div class="panel"><h3>Upload New Video</h3><form id="tsAdminVideoForm"><label>Video Title</label><input id="tsVideoTitle" required maxlength="180" placeholder="Enter video title"><label>Description</label><textarea id="tsVideoDescription" maxlength="2000" placeholder="Video description"></textarea><label>Video File</label><input id="tsVideoFile" type="file" accept="video/*" required><label>Thumbnail (optional)</label><input id="tsVideoThumb" type="file" accept="image/*"><label>Status</label><select id="tsVideoStatus"><option value="draft">Draft</option><option value="published">Publish Now</option></select><div id="tsVideoUploadMsg" class="msg"></div><button class="primary" type="submit">⬆ Upload Video</button></form></div><div class="panel"><h3>Video Library</h3><div id="tsAdminVideosTable"><div class="empty">Loading videos...</div></div></div></div>
+<div class="panel" style="margin-top:18px"><h3>Likes & Comments</h3><p style="color:#777">Admin-only engagement details. Students cannot see these counts or other students' comments.</p><div id="tsVideoEngagement"></div></div>
+</section>
+<section id="results" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Result Management</h2>
+    <p>Special test result control</p>
+  </div>
+</div>
+
+<div class="panel">
+<div id="resultsTable"></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     NOTICES
+===================================================== -->
+<section id="notices" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Notice / Announcement Management</h2>
+    <p>Publish information to students</p>
+  </div>
+</div>
+
+<div class="panel">
+
+<form id="noticeForm">
+
+<div class="grid">
+
+<div>
+<label>Notice Title *</label>
+<input id="noticeTitle" required>
+</div>
+
+<div>
+<label>Target Class</label>
+<select id="noticeClass">
+<option value="">All Classes</option>
+<option>9th</option>
+<option>10th</option>
+<option>11th</option>
+<option>12th</option>
+</select>
+</div>
+
+<div>
+<label>Target Stream</label>
+<select id="noticeStream">
+<option value="">All Streams</option>
+<option>Arts</option>
+<option>Science</option>
+<option>Commerce</option>
+</select>
+</div>
+
+<div>
+<label>Image URL</label>
+<input id="noticeImage" type="url">
+</div>
+
+<div class="full">
+<label>Description / Notice Text</label>
+<div class="ts-editor-toolbar" role="toolbar" aria-label="Notice formatting">
+  <button type="button" class="secondary" onclick="formatNotice('bold')"><b>B</b></button>
+  <button type="button" class="secondary" onclick="formatNotice('italic')"><i>I</i></button>
+  <button type="button" class="secondary" onclick="formatNotice('insertParagraph')">¶ Paragraph</button>
+  <button type="button" class="secondary" onclick="formatNotice('insertOrderedList')">1. Numbered List</button>
+</div>
+<div id="noticeDescription" class="ts-rich-editor" contenteditable="true" data-placeholder="Notice text लिखें..."></div>
+</div>
+
+</div>
+
+<button class="primary" style="width:auto" type="submit">
+PUBLISH NOTICE
+</button>
+
+<div id="noticeMsg" class="msg"></div>
+
+</form>
+</div>
+
+<div class="panel">
+<h3>Published / Saved Notices</h3>
+<div id="noticesTable"></div>
+</div>
+
+<div class="panel">
+<h3>Specific Notice — Individual User</h3>
+<p style="color:#888;margin-top:-5px">
+Student ID के आधार पर केवल एक User को Professional TECH SUPPORT Popup Notice भेजें।
+</p>
+
+<form id="specificNoticeForm">
+<div class="grid">
+  <div>
+    <label>Student ID *</label>
+    <input id="specificStudentId" required placeholder="Enter Student ID">
+  </div>
+
+  <div>
+    <label>Notice Heading *</label>
+    <input id="specificNoticeTitle" required placeholder="Specific Notice">
+  </div>
+
+  <div class="full">
+    <label>Notice Message</label>
+    <div class="ts-editor-toolbar" role="toolbar" aria-label="Specific Notice formatting">
+      <button type="button" class="secondary" onclick="formatSpecificNotice('bold')"><b>B</b></button>
+      <button type="button" class="secondary" onclick="formatSpecificNotice('italic')"><i>I</i></button>
+      <button type="button" class="secondary" onclick="formatSpecificNotice('insertParagraph')">¶ Paragraph</button>
+      <button type="button" class="secondary" onclick="formatSpecificNotice('insertOrderedList')">1. Numbered List</button>
+    </div>
+    <div id="specificNoticeMessage" class="ts-rich-editor" contenteditable="true" data-placeholder="Notice का संदेश लिखें..."></div>
+  </div>
+
+  <div class="full">
+    <label>Attachment — Image / PDF / TXT</label>
+    <input id="specificNoticeFile" type="file"
+           accept="image/*,application/pdf,text/plain,.txt">
+    <small style="display:block;color:#777;margin-top:7px">
+      File optional है। Notice भेजते ही target user के लिए active हो जाएगा।
+    </small>
+  </div>
+</div>
+
+<button class="primary" style="width:auto" type="submit">
+  SEND SPECIFIC NOTICE
+</button>
+<div id="specificNoticeMsg" class="msg"></div>
+</form>
+</div>
+
+<div class="panel">
+<h3>Specific Notice Tracking</h3>
+<div class="toolbar">
+  <input id="specificNoticeSearch" placeholder="Search Student ID / Notice ID..."
+         oninput="renderSpecificNotices()">
+  <button class="secondary" type="button" onclick="loadSpecificNotices()">↻ Refresh</button>
+</div>
+<div id="specificNoticesTable"></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     QUERIES
+===================================================== -->
+<section id="queries" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Help & Support</h2>
+    <p>Student queries and admin replies</p>
+  </div>
+  <button class="secondary" onclick="loadQueries()">↻ Refresh</button>
+</div>
+
+<div class="panel">
+<div id="queriesTable"></div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     CHAT WITH STUDENTS
+===================================================== -->
+<section id="sonpal-chat" class="section">
+  <div class="section-head">
+    <div>
+      <h2>Chat With Students</h2>
+      <p>Private Sonpal ↔ Student conversations</p>
+    </div>
+    <button class="secondary" onclick="window.tsLoadAdminSonpalChat && window.tsLoadAdminSonpalChat()">↻ Refresh</button>
+  </div>
+  <div id="tsAdminChatRoot"></div>
+</section>
+
+<!-- =====================================================
+     BRANDING
+===================================================== -->
+<section id="branding" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Official Branding</h2>
+    <p>Logo and Sonpal Signature used across documents</p>
+  </div>
+</div>
+
+<div class="grid">
+
+<div class="panel">
+<h3>Official Website Logo</h3>
+
+<div class="upload-box">
+
+<img id="currentLogo" class="preview" alt="Official Logo">
+
+<input id="logoFile" type="file"
+       accept="image/png,image/jpeg,image/webp">
+
+<br><br>
+
+<button class="primary" style="width:auto"
+        onclick="uploadBranding('logo')">
+UPLOAD & SET OFFICIAL LOGO
+</button>
+
+<p style="color:#777;font-size:12px">
+This logo becomes the official logo for supported documents.
+</p>
+
+</div>
+</div>
+
+<div class="panel">
+<h3>Sonpal Signature</h3>
+
+<div class="upload-box">
+
+<img id="currentSignature" class="preview"
+     alt="Official Signature">
+
+<input id="signatureFile" type="file"
+       accept="image/png,image/jpeg,image/webp">
+
+<br><br>
+
+<button class="primary" style="width:auto"
+        onclick="uploadBranding('signature')">
+UPLOAD & SET OFFICIAL SIGNATURE
+</button>
+
+<p style="color:#777;font-size:12px">
+Used automatically in supported slips, ID cards and results.
+</p>
+
+</div>
+</div>
+
+</div>
+
+</section>
+
+<!-- =====================================================
+     FILE MANAGER
+===================================================== -->
+<section id="files" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>File Manager</h2>
+    <p>Storage bucket overview</p>
+  </div>
+</div>
+
+<div class="cards">
+
+<div class="card">
+<div class="card-label">BRANDING</div>
+<div class="card-value">Logo / Signature</div>
+</div>
+
+<div class="card">
+<div class="card-label">STUDY MATERIALS</div>
+<div class="card-value">Educational Files</div>
+</div>
+
+<div class="card">
+<div class="card-label">NOTICES</div>
+<div class="card-value">Notice Files</div>
+</div>
+
+<div class="card">
+<div class="card-label">STUDENT PHOTOS</div>
+<div class="card-value">Student Documents</div>
+</div>
+
+</div>
+
+<div class="panel">
+<p style="color:#888">
+Storage operations are connected to the existing Supabase buckets:
+<strong>branding</strong>,
+<strong>study-materials</strong>,
+<strong>notices</strong>,
+<strong>student-photos</strong>,
+<strong>registration-slips</strong>.
+</p>
+</div>
+
+</section>
+
+<!-- =====================================================
+     ACTIVITY
+===================================================== -->
+<section id="activity" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Admin Activity</h2>
+    <p>Current administrative session information</p>
+  </div>
+</div>
+
+<div class="panel">
+<div id="activityInfo">
+Loading...
+</div>
+</div>
+
+</section>
+
+<!-- =====================================================
+     SETTINGS
+===================================================== -->
+<section id="settings" class="section">
+
+<div class="section-head">
+  <div>
+    <h2>Website Settings</h2>
+    <p>Basic TECH SUPPORT configuration</p>
+  </div>
+</div>
+
+<div class="panel">
+
+<form id="settingsForm">
+
+<div class="grid">
+
+<div>
+<label>Website Name</label>
+<input id="websiteName" value="TECH SUPPORT">
+</div>
+
+<div>
+<label>Support Email</label>
+<input id="supportEmail" type="email">
+</div>
+
+<div>
+<label>Support Mobile</label>
+<input id="supportMobile">
+</div>
+
+<div>
+<label>Website Status</label>
+<select id="websiteStatus">
+<option value="online">Online</option>
+<option value="maintenance">Maintenance</option>
+</select>
+</div>
+
+<div class="full">
+<label>Support Information</label>
+<textarea id="supportInfo"></textarea>
+</div>
+
+</div>
+
+<button class="primary" style="width:auto">
+SAVE SETTINGS
+</button>
+
+<div id="settingsMsg" class="msg"></div>
+
+</form>
+
+</div>
+
+</section>
+
+
+<!-- =====================================================
+     COURSE ADVERTISEMENTS
+===================================================== -->
+<section id="course-ads" class="section">
+  <div class="section-head">
+    <div>
+      <h2>Course Advertisements</h2>
+      <p>Student Dashboard पर दिखने वाली course images और videos manage करें। Videos students के tap करने पर ही चलेंगे।</p>
+    </div>
+    <button class="secondary" type="button" onclick="tsLoadCourseAds()">↻ Refresh</button>
+  </div>
+
+  <div class="panel">
+    <h3 id="tsAdFormHeading">नया Advertisement जोड़ें</h3>
+    <form id="tsCourseAdForm">
+      <input type="hidden" id="tsAdId">
+      <input type="hidden" id="tsAdExistingPath">
+      <input type="hidden" id="tsAdExistingPosterPath">
+      <div class="grid">
+        <div>
+          <label for="tsAdTitle">Advertisement Title *</label>
+          <input id="tsAdTitle" maxlength="180" required placeholder="जैसे: Class 10th Crash Course">
+        </div>
+        <div>
+          <label for="tsAdMedia">Image / Video File *</label>
+          <input id="tsAdMedia" type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime">
+          <small style="color:#888">Image या video • अधिकतम 100 MB</small>
+        </div>
+        <div class="full">
+          <label for="tsAdDescription">Description</label>
+          <textarea id="tsAdDescription" maxlength="2000" placeholder="Course की जानकारी..."></textarea>
+        </div>
+        <div>
+          <label for="tsAdCtaLabel">Button Label (optional)</label>
+          <input id="tsAdCtaLabel" maxlength="60" placeholder="जैसे: Explore Course">
+        </div>
+        <div>
+          <label for="tsAdCtaDestination">Button Link (optional)</label>
+          <input id="tsAdCtaDestination" placeholder="https://... या techsupport://...">
+        </div>
+        <div>
+          <label for="tsAdOrder">Display Order (कम नंबर पहले)</label>
+          <input id="tsAdOrder" type="number" step="1" value="0">
+        </div>
+        <div>
+          <label for="tsAdPoster">Video Poster Image (optional)</label>
+          <input id="tsAdPoster" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;margin:15px 0">
+        <input id="tsAdActive" type="checkbox" style="width:auto"> Student Panel पर प्रकाशित (Active)
+      </label>
+      <div class="toolbar">
+        <button class="primary" type="submit" style="width:auto">Save Advertisement</button>
+        <button class="secondary" type="button" onclick="tsResetCourseAdForm()">Clear Form</button>
+      </div>
+      <div id="tsAdFormMsg" class="msg"></div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="toolbar" style="align-items:center;justify-content:space-between">
+      <h3 style="margin:0">Advertisement Library</h3>
+      <select id="tsAdFilter" onchange="tsRenderCourseAds()" style="max-width:200px">
+        <option value="all">All Advertisements</option>
+        <option value="active">Active only</option>
+        <option value="inactive">Inactive only</option>
+      </select>
+    </div>
+    <div id="tsCourseAdsList"><div class="empty">Advertisements load हो रहे हैं...</div></div>
+  </div>
+</section>
+
+</div>
+</main>
+</div>
+
+<!-- =====================================================
+     MODAL
+===================================================== -->
+<div id="modal" class="modal">
+<div class="modal-box">
+<div class="modal-head">
+<h3 id="modalTitle">Details</h3>
+<button class="close" onclick="closeModal()">×</button>
+</div>
+<div id="modalBody"></div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+  "https://dehgjivefnaeeikrnavc.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_HL4IF0LGlV1T3ACQfi6OKA_0J9tU-XY";
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+/* =====================================================
+   GLOBAL STATE
+===================================================== */
+
+let currentUser = null;
+let currentAdmin = null;
+let students = [];
+let materials = [];
+let quizzes = [];
+let specialTests = [];
+let queries = [];
+let notices = [];
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function esc(value){
+  if(value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function toast(message){
+  const el=document.getElementById("toast");
+  el.textContent=message;
+  el.classList.add("show");
+  setTimeout(()=>el.classList.remove("show"),3500);
+}
+
+function setMsg(id,message,type="error"){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.className="msg "+(type==="ok"?"ok":"error");
+  el.textContent=message;
+}
+
+function clearMsg(id){
+  const el=document.getElementById(id);
+  if(el){
+    el.className="msg";
+    el.textContent="";
+  }
+}
+
+function showModal(title,html){
+  document.getElementById("modalTitle").textContent=title;
+  document.getElementById("modalBody").innerHTML=html;
+  document.getElementById("modal").classList.add("open");
+}
+
+function closeModal(){
+  document.getElementById("modal").classList.remove("open");
+}
+
+function formatDate(v){
+  if(!v)return "—";
+  try{return new Date(v).toLocaleString("en-IN");}
+  catch{return v}
+}
+
+function safeArray(v){
+  return Array.isArray(v)?v:[];
+}
+
+/* =====================================================
+   AUTH
+===================================================== */
+
+async function checkSession(){
+
+  const {data,error} =
+    await supabaseClient.auth.getSession();
+
+  if(error){
+    console.error(error);
+    return;
+  }
+
+  if(data.session){
+    currentUser=data.session.user;
+
+    const ok=await loadAdmin();
+
+    if(ok){
+      openApp();
+    }else{
+      await supabaseClient.auth.signOut();
+    }
+  }
+}
+
+async function loadAdmin(){
+
+  if(!currentUser)return false;
+
+  const {data,error} =
+    await supabaseClient
+      .from("admin_users")
+      .select("id,full_name,role,is_active,created_at,updated_at")
+      .eq("id",currentUser.id)
+      .maybeSingle();
+
+  if(error){
+    console.error(error);
+    toast("Admin verification failed");
+    return false;
+  }
+
+  if(!data){
+    toast("Admin account not found");
+    return false;
+  }
+
+  if(data.is_active !== true){
+    toast("Admin account is inactive");
+    return false;
+  }
+
+  currentAdmin=data;
+  document.getElementById("adminName").textContent =
+    data.full_name || currentUser.email || "Admin";
+
+  return true;
+}
+
+document.getElementById("loginForm")
+.addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  const email=
+    document.getElementById("loginEmail").value.trim();
+
+  const password=
+    document.getElementById("loginPassword").value;
+
+  clearMsg("loginMsg");
+
+  const {data,error} =
+    await supabaseClient.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if(error){
+    setMsg("loginMsg",error.message);
+    return;
+  }
+
+  currentUser=data.user;
+
+  const ok=await loadAdmin();
+
+  if(!ok){
+    await supabaseClient.auth.signOut();
+    setMsg(
+      "loginMsg",
+      "This account is not authorized as an active Admin."
+    );
+    return;
+  }
+
+  openApp();
+});
+
+document.getElementById("forgotBtn")
+.addEventListener("click",async()=>{
+
+  const email=
+    document.getElementById("loginEmail").value.trim();
+
+  if(!email){
+    setMsg(
+      "loginMsg",
+      "Enter your admin email first."
+    );
+    return;
+  }
+
+  const {error}=
+    await supabaseClient.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo:window.location.href
+      }
+    );
+
+  if(error){
+    setMsg("loginMsg",error.message);
+  }else{
+    setMsg(
+      "loginMsg",
+      "Password reset email sent.",
+      "ok"
+    );
+  }
+});
+
+document.getElementById("logoutBtn")
+.addEventListener("click",async()=>{
+
+  await supabaseClient.auth.signOut();
+
+  currentUser=null;
+  currentAdmin=null;
+
+  document.getElementById("app").style.display="none";
+  document.getElementById("loginScreen").style.display="flex";
+});
+
+/* =====================================================
+   APP OPEN
+===================================================== */
+
+function openApp(){
+
+  document.getElementById("loginScreen")
+    .style.display="none";
+
+  document.getElementById("app")
+    .style.display="block";
+
+  loadBranding();
+  loadDashboard();
+}
+
+/* =====================================================
+   NAVIGATION
+===================================================== */
+
+const sectionTitles={
+  dashboard:"Dashboard",
+  students:"Student Management",
+  registrations:"Registration Management",
+  materials:"Study Material Management",
+  quiz:"Quiz Management",
+  special:"Special Test Management",
+  results:"Result Management",
+  notices:"Notice Management",
+  queries:"Help & Support",
+  "sonpal-chat":"Chat With Students",
+  branding:"Official Branding",
+  files:"File Manager",
+  activity:"Admin Activity",
+  analytics:"Analytics & Engagement",
+  videos:"Video Management",
+  "course-ads":"Course Advertisements",
+  settings:"Website Settings"
+};
+
+document.querySelectorAll(".nav button[data-section]")
+.forEach(btn=>{
+
+  btn.addEventListener("click",()=>{
+
+    const id=btn.dataset.section;
+
+    document.querySelectorAll(".nav button")
+      .forEach(x=>x.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    document.querySelectorAll(".section")
+      .forEach(x=>x.classList.remove("active"));
+
+    const section=document.getElementById(id);
+
+    if(section)section.classList.add("active");
+
+    document.getElementById("pageTitle")
+      .textContent=sectionTitles[id]||"Admin Panel";
+
+    if(id==="dashboard")loadDashboard();
+    if(id==="students")loadStudents();
+    if(id==="registrations")loadRegistrations();
+    if(id==="materials")loadMaterials();
+    if(id==="quiz")loadQuizzes();
+    if(id==="special")loadSpecialTests();
+    if(id==="videos" && typeof window.loadAdminVideos === "function") setTimeout(window.loadAdminVideos,0);
+    if(id==="course-ads") setTimeout(tsLoadCourseAds,0);
+    if(id==="results")loadResults();
+    if(id==="notices")loadNotices();
+    if(id==="queries")loadQueries();
+    if(id==="branding")loadBranding();
+    if(id==="activity")loadActivity();
+    if(id==="analytics")loadAnalytics();
+  });
+});
+
+
+// Ensure Video Library always refreshes when the Video Management section opens.
+document.addEventListener("DOMContentLoaded",()=>{
+  setTimeout(()=>{
+    const section=document.getElementById("videos");
+    if(section && section.classList.contains("active") && typeof window.loadAdminVideos==="function") window.loadAdminVideos();
+  },700);
+});
+
+/* =====================================================
+   DASHBOARD
+===================================================== */
+
+async function countTable(table){
+
+  const {count,error}=
+    await supabaseClient
+      .from(table)
+      .select("*",{count:"exact",head:true});
+
+  if(error){
+    console.warn(table,error.message);
+    return 0;
+  }
+
+  return count||0;
+}
+
+async function loadAnalytics(){
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=(v===null||v===undefined?'—':v)};
+  const box=document.getElementById('analyticsEngagement');
+  const fmt=(v)=>v?new Date(v).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';
+  const esc=(v)=>typeof escA==='function'?escA(String(v??'')):String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+
+  box.innerHTML='<div class="empty">Analytics load हो रही है...</div>';
+
+  try{
+    /* -------------------------------------------------------
+       MAIN SUMMARY
+       Use the secured analytics RPC first. This keeps all
+       existing backend authorization intact.
+    ------------------------------------------------------- */
+    const a=await supabaseClient.rpc('get_tech_support_analytics');
+    if(a.error) throw a.error;
+    const x=a.data||{};
+    const w=x.website||{}, st=x.students||{}, te=x.test_engagement||{};
+
+    set('aTotalVisits',w.total_visits);
+    set('aUniqueVisitors',w.unique_visitors);
+    set('aTodayVisits',w.today_visits);
+    set('a7Visits',w.last_7_days_visits);
+    set('a30Visits',w.last_30_days_visits);
+    set('aStudents',st.total_registered);
+    set('aAttempts',te.total_attempts);
+    set('aAttemptedStudents',te.unique_students_attempted);
+    set('aNoTest',x.registered_but_no_test);
+
+    /* -------------------------------------------------------
+       STUDENT ENGAGEMENT
+       RPC is preferred. If the engagement RPC is temporarily
+       unavailable, build the table from the same live tables
+       already used by the Admin Panel. No SQL changes required.
+    ------------------------------------------------------- */
+    let rows=[];
+    let engagementError=null;
+
+    const e=await supabaseClient.rpc('get_student_engagement');
+    if(!e.error && Array.isArray(e.data)){
+      rows=e.data;
+    }else{
+      engagementError=e.error;
+
+      const [sr,qr,rr]=await Promise.all([
+        supabaseClient.from('students').select('id,student_id,name,class,stream,account_status,created_at,updated_at'),
+        supabaseClient.from('quiz_attempts').select('student_id,started_at,submitted_at'),
+        supabaseClient.from('special_test_attempts').select('student_id,created_at,started_at,submitted_at')
+      ]);
+
+      if(sr.error) throw sr.error;
+      if(qr.error) throw qr.error;
+      if(rr.error) throw rr.error;
+
+      const qm=new Map(), sm=new Map();
+      (qr.data||[]).forEach(r=>{
+        const k=r.student_id;
+        const old=qm.get(k)||{count:0,last:null};
+        old.count++;
+        const d=r.submitted_at||r.started_at;
+        if(d && (!old.last || new Date(d)>new Date(old.last))) old.last=d;
+        qm.set(k,old);
+      });
+      (rr.data||[]).forEach(r=>{
+        const k=r.student_id;
+        const old=sm.get(k)||{count:0,last:null};
+        old.count++;
+        const d=r.submitted_at||r.started_at||r.created_at;
+        if(d && (!old.last || new Date(d)>new Date(old.last))) old.last=d;
+        sm.set(k,old);
+      });
+
+      rows=(sr.data||[]).map(s=>{
+        const q=qm.get(s.id)||{count:0,last:null};
+        const stt=sm.get(s.id)||{count:0,last:null};
+        const candidates=[s.updated_at,q.last,stt.last].filter(Boolean);
+        const last=candidates.length?candidates.reduce((a,b)=>new Date(a)>new Date(b)?a:b):s.created_at;
+        const total=q.count+stt.count;
+        const age=Date.now()-new Date(last).getTime();
+        const status=total===0?'registered_no_test':age<=7*86400000?'active':age<=30*86400000?'recently_active':'inactive';
+        return {
+          student_uuid:s.id,
+          student_id:s.student_id,
+          student_name:s.name,
+          student_class:s.class,
+          student_stream:s.stream,
+          account_status:s.account_status,
+          registered_at:s.created_at,
+          quiz_attempts:q.count,
+          special_test_attempts:stt.count,
+          total_test_attempts:total,
+          last_quiz_attempt:q.last,
+          last_special_test_attempt:stt.last,
+          last_activity:last,
+          engagement_status:status
+        };
+      }).sort((a,b)=>{
+        const an=a.total_test_attempts===0?0:1, bn=b.total_test_attempts===0?0:1;
+        return an-bn || new Date(b.registered_at)-new Date(a.registered_at);
+      });
+    }
+
+    if(!rows.length){
+      box.innerHTML='<div class="empty">अभी कोई student engagement data उपलब्ध नहीं है।</div>';
+      return;
+    }
+
+    const counts={registered_no_test:0,active:0,recently_active:0,inactive:0};
+    rows.forEach(r=>{const k=String(r.engagement_status||'inactive').toLowerCase();if(counts[k]!==undefined)counts[k]++;});
+
+    box.innerHTML=`
+      <div class="cards" style="margin-bottom:14px">
+        <div class="card"><div class="card-label">ACTIVE</div><div class="card-value">${counts.active}</div></div>
+        <div class="card"><div class="card-label">RECENTLY ACTIVE</div><div class="card-value">${counts.recently_active}</div></div>
+        <div class="card"><div class="card-label">NO TEST ATTEMPT</div><div class="card-value">${counts.registered_no_test}</div></div>
+        <div class="card"><div class="card-label">INACTIVE</div><div class="card-value">${counts.inactive}</div></div>
+      </div>
+      <div class="table-wrap"><table><thead><tr>
+        <th>Student</th><th>Class</th><th>Stream</th><th>Quiz</th><th>Special Test</th><th>Total</th><th>Last Activity</th><th>Status</th>
+      </tr></thead><tbody>${rows.map(r=>{
+        const status=String(r.engagement_status||'').toLowerCase();
+        const label=status==='registered_no_test'?'Registered — No Test':status==='recently_active'?'Recently Active':status==='active'?'Active':'Inactive';
+        return `<tr>
+          <td><b>${esc(r.student_name||'—')}</b><br><small>${esc(r.student_id||'')}</small></td>
+          <td>${esc(r.student_class||'—')}</td>
+          <td>${esc(r.student_stream||'—')}</td>
+          <td>${Number(r.quiz_attempts||0)}</td>
+          <td>${Number(r.special_test_attempts||0)}</td>
+          <td><b>${Number(r.total_test_attempts||0)}</b></td>
+          <td>${fmt(r.last_activity)}</td>
+          <td>${esc(label)}</td>
+        </tr>`;
+      }).join('')}</tbody></table></div>
+      ${engagementError?'<div class="muted" style="margin-top:10px">Student engagement is displayed using live student/test records.</div>':''}
+    `;
+  }catch(err){
+    console.error('Analytics error:',err);
+    box.innerHTML=`<div class="msg error" style="display:block">Analytics load नहीं हो सकी: ${esc(err.message||String(err))}</div>`;
+  }
+}
+async function loadDashboard(){
+
+  const status=document.getElementById("systemStatus");
+
+  try{
+
+    const results=await Promise.all([
+      countTable("students"),
+      countTable("quizzes"),
+      countTable("special_tests"),
+      countTable("study_materials"),
+      countTable("notices"),
+      countTable("support_queries")
+    ]);
+
+    const [
+      totalStudents,
+      quizCount,
+      specialCount,
+      materialCount,
+      noticeCount,
+      queryCount
+    ]=results;
+
+    document.getElementById("dTotalStudents")
+      .textContent=totalStudents;
+
+    document.getElementById("dQuiz")
+      .textContent=quizCount;
+
+    document.getElementById("dSpecial")
+      .textContent=specialCount;
+
+    document.getElementById("dMaterials")
+      .textContent=materialCount;
+
+    document.getElementById("dNotices")
+      .textContent=noticeCount;
+
+    document.getElementById("dQueries")
+      .textContent=queryCount;
+
+    const {data:studentData,error:studentError}=
+      await supabaseClient
+        .from("students")
+        .select("*");
+
+    if(!studentError && studentData){
+
+      const rows=studentData;
+
+      document.getElementById("dClass9")
+        .textContent=
+        rows.filter(x=>
+          String(x.class||x.student_class||"")
+          .toLowerCase()==="9th"
+        ).length;
+
+      document.getElementById("dClass10")
+        .textContent=
+        rows.filter(x=>
+          String(x.class||x.student_class||"")
+          .toLowerCase()==="10th"
+        ).length;
+
+      document.getElementById("dClass11")
+        .textContent=
+        rows.filter(x=>
+          String(x.class||x.student_class||"")
+          .toLowerCase()==="11th"
+        ).length;
+
+      document.getElementById("dClass12")
+        .textContent=
+        rows.filter(x=>
+          String(x.class||x.student_class||"")
+          .toLowerCase()==="12th"
+        ).length;
+
+      document.getElementById("dArts")
+        .textContent=
+        rows.filter(x=>
+          String(x.stream||"")
+          .toLowerCase()==="arts"
+        ).length;
+
+      document.getElementById("dScience")
+        .textContent=
+        rows.filter(x=>
+          String(x.stream||"")
+          .toLowerCase()==="science"
+        ).length;
+
+      document.getElementById("dCommerce")
+        .textContent=
+        rows.filter(x=>
+          String(x.stream||"")
+          .toLowerCase()==="commerce"
+        ).length;
+
+      document.getElementById("dActive")
+        .textContent=
+        rows.filter(x=>
+          x.account_status==="active" ||
+          x.is_active===true ||
+          !x.account_status && x.is_active!==false
+        ).length;
+    }
+
+    status.innerHTML=
+      '<span class="badge green">CONNECTED</span> '+
+      'Supabase database connection is working.';
+
+  }catch(err){
+
+    console.error(err);
+
+    status.innerHTML=
+      '<span class="badge red">ERROR</span> '+
+      esc(err.message);
+  }
+}
+
+/* =====================================================
+   STUDENTS
+===================================================== */
+
+/* =====================================================
+   ADMIN STUDENT DATA — LOAD ALL REGISTERED STUDENTS
+   Uses the secured admin_get_students RPC first so RLS on
+   the students table cannot hide other students from Admin.
+   Falls back to paginated table reads for compatibility.
+===================================================== */
+async function fetchAllAdminStudents(){
+
+  let rpcLastError=null;
+
+  // Preferred: secured Admin RPC. Try the no-argument version first.
+  try{
+    let r=await supabaseClient.rpc("admin_get_students");
+    if(!r.error){
+      let d=r.data;
+      if(typeof d === "string"){
+        try{ d=JSON.parse(d); }catch(_){}
+      }
+      if(Array.isArray(d)) return d;
+      if(d && Array.isArray(d.students)) return d.students;
+      if(d && Array.isArray(d.data)) return d.data;
+    }else{
+      rpcLastError=r.error;
+    }
+  }catch(e){ rpcLastError=e; }
+
+  // Compatibility: some deployments expose search/limit parameters.
+  for(const args of [
+    {p_search:null,p_limit:5000},
+    {p_search:"",p_limit:5000}
+  ]){
+    try{
+      const r=await supabaseClient.rpc("admin_get_students",args);
+      if(!r.error){
+        let d=r.data;
+        if(typeof d === "string"){
+          try{ d=JSON.parse(d); }catch(_){}
+        }
+        if(Array.isArray(d)) return d;
+        if(d && Array.isArray(d.students)) return d.students;
+        if(d && Array.isArray(d.data)) return d.data;
+      }else{
+        rpcLastError=r.error;
+      }
+    }catch(e){ rpcLastError=e; }
+  }
+
+  // Final compatibility fallback: paginate instead of relying on a single
+  // implicit response page. This also supports databases without the RPC.
+  const all=[];
+  const pageSize=1000;
+  for(let from=0; from<100000; from+=pageSize){
+    const to=from+pageSize-1;
+    const q=await supabaseClient
+      .from("students")
+      .select("*")
+      .order("created_at",{ascending:false})
+      .range(from,to);
+
+    if(q.error){
+      if(all.length) return all;
+      throw (rpcLastError || q.error);
+    }
+
+    const page=Array.isArray(q.data)?q.data:[];
+    all.push(...page);
+    if(page.length<pageSize) break;
+  }
+
+  return all;
+}
+
+async function loadStudents(){
+
+  const target=
+    document.getElementById("studentsTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading all registered students...</div>';
+
+  try{
+    students=safeArray(await fetchAllAdminStudents());
+    renderStudents();
+  }catch(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error?.message||String(error))+'</div>';
+  }
+}
+
+function studentValue(s,...keys){
+
+  for(const k of keys){
+    if(s[k]!==undefined && s[k]!==null)
+      return s[k];
+  }
+
+  return "";
+}
+
+function renderStudents(){
+
+  const target=
+    document.getElementById("studentsTable");
+
+  const search=
+    document.getElementById("studentSearch")
+      .value.toLowerCase().trim();
+
+  const cls=
+    document.getElementById("studentClassFilter").value;
+
+  const stream=
+    document.getElementById("studentStreamFilter").value;
+
+  let rows=students.filter(s=>{
+
+    const id=String(studentValue(
+      s,"student_id","student_code","id"
+    )).toLowerCase();
+
+    const name=String(studentValue(
+      s,"name","full_name","student_name"
+    )).toLowerCase();
+
+    const mobile=String(studentValue(
+      s,"mobile","mobile_number","phone"
+    )).toLowerCase();
+
+    const sc=String(studentValue(
+      s,"class","student_class"
+    ));
+
+    const ss=String(studentValue(s,"stream"));
+
+    return (!search ||
+      id.includes(search) ||
+      name.includes(search) ||
+      mobile.includes(search)
+    ) &&
+    (!cls || sc===cls) &&
+    (!stream || ss===stream);
+  });
+
+  if(!rows.length){
+    target.innerHTML=
+      '<div class="empty">No students found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Student ID</th>
+    <th>Name</th>
+    <th>Mobile</th>
+    <th>Class</th>
+    <th>Board</th>
+    <th>Stream</th>
+    <th>Status</th>
+    <th>Registered</th>
+    <th>Action</th>
+  </tr>
+  </thead><tbody>`;
+
+  rows.forEach(s=>{
+
+    const id=studentValue(
+      s,"student_id","student_code","id"
+    );
+
+    const name=studentValue(
+      s,"name","full_name","student_name"
+    );
+
+    const mobile=studentValue(
+      s,"mobile","mobile_number","phone"
+    );
+
+    const cls=studentValue(
+      s,"class","student_class"
+    );
+
+    const board=studentValue(s,"board");
+    const stream=studentValue(s,"stream");
+
+    const status=
+      s.account_status ||
+      (s.is_active===false?"inactive":"active");
+
+    html+=`
+    <tr>
+      <td><b>${esc(id)}</b></td>
+      <td>${esc(name)}</td>
+      <td>${esc(mobile)}</td>
+      <td>${esc(cls)}</td>
+      <td>${esc(board)}</td>
+      <td>${esc(stream)}</td>
+      <td>
+        <span class="badge ${status==="active"?"green":"red"}">
+          ${esc(status)}
+        </span>
+      </td>
+      <td>${esc(formatDate(s.created_at))}</td>
+      <td>
+        <div class="actions">
+          <button class="secondary"
+            onclick='viewStudent(${JSON.stringify(s)})'>
+            View
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+function viewStudent(student){
+
+  let html="<div class='grid'>";
+
+  Object.entries(student).forEach(([key,value])=>{
+
+    if(key==="password" || key==="password_hash")
+      return;
+
+    html+=`
+      <div>
+        <label>${esc(key)}</label>
+        <div style="padding:10px;background:#0b0b0b;border:1px solid #292929;border-radius:8px">
+          ${esc(value)}
+        </div>
+      </div>`;
+  });
+
+  html+="</div>";
+  html+=`<div class="ts-admin-toolbar" style="margin-top:18px">
+    <button class="primary" onclick='viewStudentSlip(${JSON.stringify(student)})'>Registration Slip</button>
+    <button class="secondary" onclick='viewStudentIdCard(${JSON.stringify(student)})'>ID Card</button>
+    <button class="secondary" onclick='viewStudentMarksheets(${JSON.stringify(student)})'>Marksheet</button>
+  </div>`;
+
+  showModal("Student Details",html);
+}
+
+function studentPhotoUrl(s){
+  return s.photo_url||s.profile_photo_url||s.photo||"";
+}
+function studentSlipHtml(s){
+  const photo=studentPhotoUrl(s);
+  return `<div class="ts-admin-doc">${photo?`<img src="${esc(photo)}" class="ts-admin-doc-photo">`:""}<h2>TECH SUPPORT</h2><h3>STUDENT REGISTRATION SLIP</h3><hr><p><b>Student ID:</b> ${esc(studentValue(s,"student_id","student_code","id"))}</p><p><b>Name:</b> ${esc(studentValue(s,"name","full_name","student_name"))}</p><p><b>Mobile:</b> ${esc(s.mobile||s.phone||"")}</p><p><b>Class:</b> ${esc(studentValue(s,"class","student_class"))}</p><p><b>Board:</b> ${esc(s.board||"")}</p><p><b>Stream:</b> ${esc(s.stream||"")}</p><p><b>Address:</b> ${esc(s.address||"")}</p><p style="margin-top:40px;text-align:right"><b>Founder — Sonpal Singh</b></p></div>`;
+}
+window.viewStudentSlip=function(s){showModal("Registration Slip",studentSlipHtml(s))};
+window.viewStudentIdCard=function(s){const photo=studentPhotoUrl(s);showModal("Digital ID Card",`<div class="ts-admin-idcard">${photo?`<img src="${esc(photo)}">`:""}<div><h2>TECH SUPPORT</h2><h3>STUDENT IDENTITY CARD</h3><p><b>${esc(studentValue(s,"name","full_name","student_name"))}</b></p><p>Student ID: ${esc(studentValue(s,"student_id","student_code","id"))}</p><p>Class: ${esc(studentValue(s,"class","student_class"))} • ${esc(s.stream||"")}</p><p>Board: ${esc(s.board||"")}</p></div></div>`) };
+window.viewStudentMarksheets=async function(s){const sid=s.id; const r=await supabaseClient.from("special_test_results").select("*").eq("student_id",sid).order("created_at",{ascending:false}); if(r.error){showModal("Marksheets",`<div class="empty">${esc(r.error.message)}</div>`);return} if(!r.data?.length){showModal("Marksheets",`<div class="empty">इस student की कोई marksheet उपलब्ध नहीं है।</div>`);return} showModal("Student Marksheets",r.data.map(x=>`<div class="panel" style="margin-bottom:12px"><h3>${esc(x.test_title||x.title||"Special Test Result")}</h3><p>Obtained: <b>${esc(x.obtained_marks??0)}</b> / ${esc(x.total_marks??0)}</p><p>Percentage: <b>${esc(x.percentage??0)}%</b></p><p>Status: ${esc(x.result_status||x.status||"")}</p>${x.result_remarks?`<div class="alert alert-info"><b>Advice / Remark:</b><br>${esc(x.result_remarks)}</div>`:""}</div>`).join(""))};
+
+/* =====================================================
+   REGISTRATIONS
+===================================================== */
+
+async function loadRegistrations(){
+
+  const target=
+    document.getElementById("registrationTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading all registration records...</div>';
+
+  let data=[];
+  try{
+    data=safeArray(await fetchAllAdminStudents());
+  }catch(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error?.message||String(error))+'</div>';
+    return;
+  }
+
+  if(!data.length){
+    target.innerHTML=
+      '<div class="empty">No registrations found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Student ID</th>
+    <th>Name</th>
+    <th>Class</th>
+    <th>Board</th>
+    <th>Stream</th>
+    <th>Registration Date</th>
+    <th>Action</th>
+  </tr>
+  </thead><tbody>`;
+
+  data.forEach(s=>{
+
+    html+=`
+    <tr>
+      <td>${esc(studentValue(s,"student_id","student_code","id"))}</td>
+      <td>${esc(studentValue(s,"name","full_name","student_name"))}</td>
+      <td>${esc(studentValue(s,"class","student_class"))}</td>
+      <td>${esc(s.board)}</td>
+      <td>${esc(s.stream)}</td>
+      <td>${esc(formatDate(s.created_at))}</td>
+      <td>
+        <button class="secondary"
+          onclick='viewStudent(${JSON.stringify(s)})'>
+          View
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+/* =====================================================
+   MATERIALS
+===================================================== */
+
+/* =====================================================
+   MATERIAL TARGET / PDF ACCESS
+===================================================== */
+(function setupMaterialTargetControls(){
+  const clsEl=document.getElementById("materialClass");
+  const streamEl=document.getElementById("materialStream");
+  const streamWrap=document.getElementById("materialStreamWrap");
+  const typeEl=document.getElementById("materialType");
+  const modeEl=document.getElementById("materialDownloadMode");
+  const fileEl=document.getElementById("materialFile");
+  const modeWrap=document.getElementById("materialDownloadModeWrap");
+  const help=document.getElementById("materialFileHelp");
+
+  function sync(){
+    const cls=clsEl?.value||"";
+    const isLower=cls==="9th"||cls==="10th";
+    if(streamEl){
+      if(isLower){
+        streamEl.value="All";
+        streamEl.disabled=true;
+      }else{
+        streamEl.disabled=false;
+        if(streamEl.value==="All") streamEl.value="";
+      }
+    }
+    if(streamWrap) streamWrap.style.display=isLower?"none":"block";
+
+    const isPdf=(typeEl?.value||"").toLowerCase()==="pdf";
+    if(modeWrap) modeWrap.style.display=isPdf?"block":"none";
+    if(modeEl) modeEl.disabled=!isPdf;
+    if(fileEl) fileEl.accept=isPdf?"application/pdf,.pdf":"*/*";
+    if(help) help.textContent=isPdf
+      ? "Non-Downloadable PDF केवल Student Panel के Internal Viewer में खुलेगी।"
+      : "इस material type के लिए सामान्य file upload रहेगा।";
+  }
+
+  clsEl?.addEventListener("change",sync);
+  typeEl?.addEventListener("change",sync);
+  window.syncMaterialTargetControls=sync;
+  sync();
+})();
+
+document.getElementById("materialForm")
+.addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  clearMsg("materialMsg");
+
+  const title=
+    document.getElementById("materialTitle").value.trim();
+
+  const subject=
+    document.getElementById("materialSubject").value.trim();
+
+  const cls=
+    document.getElementById("materialClass").value;
+
+  const stream=
+    document.getElementById("materialStream").value || "All";
+
+  const type=
+    document.getElementById("materialType").value;
+
+  const downloadMode=
+    type==="PDF"
+      ? (document.getElementById("materialDownloadMode")?.value || "downloadable")
+      : "downloadable";
+
+  const description=
+    document.getElementById("materialDescription").value.trim();
+
+  const externalUrl=
+    document.getElementById("materialUrl").value.trim();
+
+  const topic=
+    document.getElementById("materialTopic").value.trim();
+
+  const file=
+    document.getElementById("materialFile").files[0];
+
+  const publisherName=prompt("कौन Study Material publish कर रहा है? अपना नाम लिखें:", currentAdmin?.full_name || "");
+  if(publisherName===null) return;
+  const publisher=publisherName.trim();
+  if(!publisher){ toast("Publisher name जरूरी है।"); return; }
+
+  let fileUrl=null;
+  let fileName=null;
+  let storageBucket=null;
+  let storagePath=null;
+
+  try{
+
+    // Use the Admin Auth session that opened this panel. Do not re-query
+    // admin_users here: that table intentionally allows an admin to read only
+    // its own row, and a redundant check can incorrectly report no active admin.
+    const { data: sessionData, error: sessionError } =
+      await supabaseClient.auth.getSession();
+    if(sessionError) throw sessionError;
+
+    const sessionUser = sessionData?.session?.user || null;
+    if(!sessionUser){
+      throw new Error("Admin session expired. Please login again.");
+    }
+
+    currentUser = sessionUser;
+
+    if(!currentAdmin || currentAdmin.id !== currentUser.id || currentAdmin.is_active !== true){
+      const adminCheck = await supabaseClient
+        .from("admin_users")
+        .select("id,full_name,role,is_active")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+
+      if(adminCheck.error) throw adminCheck.error;
+      if(!adminCheck.data || adminCheck.data.is_active !== true){
+        throw new Error("Active Admin session required for Material upload.");
+      }
+      currentAdmin = adminCheck.data;
+    }
+
+    if(type==="PDF" && !file){
+      throw new Error("PDF file चुनना जरूरी है।");
+    }
+
+    if(type==="PDF" && file && file.type && file.type!=="application/pdf" && !/\.pdf$/i.test(file.name)){
+      throw new Error("केवल PDF file upload करें।");
+    }
+
+    if(file){
+
+      const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+      const path="admin/"+Date.now()+"-"+safeName;
+
+      if(type==="PDF" && downloadMode==="non_downloadable"){
+        storageBucket="study-materials-protected";
+        storagePath=path;
+
+        const {error:uploadError}=
+          await supabaseClient.storage
+            .from(storageBucket)
+            .upload(path,file,{upsert:false,contentType:"application/pdf"});
+
+        if(uploadError){
+          throw new Error("Non-Downloadable upload failed: "+uploadError.message);
+        }
+      }else{
+        storageBucket="study-materials";
+        storagePath=path;
+
+        const {error:uploadError}=
+          await supabaseClient.storage
+            .from(storageBucket)
+            .upload(path,file,{upsert:true,contentType:file.type||undefined});
+
+        if(uploadError){
+          throw new Error("Downloadable upload failed: "+uploadError.message);
+        }
+
+        const {data:urlData}=
+          supabaseClient.storage
+            .from(storageBucket)
+            .getPublicUrl(path);
+
+        fileUrl=urlData.publicUrl;
+      }
+
+      fileName=file.name;
+    }
+
+    const payload={
+      title,
+      subject,
+      class:cls,
+      stream,
+      target_class:cls,
+      target_stream:stream,
+      material_type:type,
+      download_mode:downloadMode,
+      storage_bucket:storageBucket,
+      storage_path:storagePath,
+      description:
+        "Published by: "+publisher+"\n"+
+        (topic
+          ? "Topic: "+topic+
+            (description?"\n"+description:"")
+          : description),
+      file_url:fileUrl,
+      file_name:fileName,
+      external_url:externalUrl || null,
+      is_published:true
+    };
+
+    const {error}=
+      await supabaseClient
+        .from("study_materials")
+        .insert(payload);
+
+    if(error){
+      throw new Error("Material database insert failed: "+error.message);
+    }
+
+    setMsg(
+      "materialMsg",
+      "Study material added successfully.",
+      "ok"
+    );
+
+    this.reset();
+    if(typeof window.syncMaterialTargetControls==="function") window.syncMaterialTargetControls();
+    loadMaterials();
+    loadDashboard();
+    tsShowThankYou("Thank You Mr. "+publisher);
+
+  }catch(err){
+
+    console.error(err);
+
+    setMsg(
+      "materialMsg",
+      "Material error: "+err.message
+    );
+  }
+});
+
+async function loadMaterials(){
+
+  const target=
+    document.getElementById("materialsTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading materials...</div>';
+
+  const {data,error}=
+    await supabaseClient
+      .from("study_materials")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  materials=safeArray(data);
+
+  if(!materials.length){
+    target.innerHTML=
+      '<div class="empty">No study materials found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Title</th>
+    <th>Subject</th>
+    <th>Class</th>
+    <th>Stream</th>
+    <th>Type</th>
+    <th>PDF Access</th>
+    <th>Status</th>
+    <th>Action</th>
+  </tr>
+  </thead><tbody>`;
+
+  materials.forEach(m=>{
+
+    html+=`
+    <tr>
+      <td>${esc(m.title)}</td>
+      <td>${esc(m.subject)}</td>
+      <td>${esc(m.class)}</td>
+      <td>${esc(m.stream)}</td>
+      <td>${esc(m.material_type)}</td>
+      <td>${esc(m.material_type==="PDF" ? (m.download_mode==="non_downloadable" ? "Non-Downloadable" : "Downloadable") : "—")}</td>
+      <td>
+        <span class="badge ${m.is_published!==false?"green":"red"}">
+          ${m.is_published!==false?"Published":"Hidden"}
+        </span>
+      </td>
+      <td>
+        <div class="actions">
+          ${m.file_url?
+            `<a class="secondary" href="${esc(m.file_url)}" target="_blank">Open</a>`:""}
+          ${m.external_url?
+            `<a class="secondary" href="${esc(m.external_url)}" target="_blank">Link</a>`:""}
+          <button class="danger"
+            onclick="deleteMaterial('${esc(m.id)}')">
+            Delete
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+async function deleteMaterial(id){
+
+  if(!confirm("Delete this study material?"))return;
+
+  const {error}=
+    await supabaseClient
+      .from("study_materials")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  toast("Material deleted");
+  loadMaterials();
+  loadDashboard();
+}
+
+/* =====================================================
+   QUIZ
+===================================================== */
+
+(function setupQuizClassControls(){
+  const cls=document.getElementById("quizClass");
+  const stream=document.getElementById("quizStream");
+  function sync(){
+    const lower=cls?.value==="9th" || cls?.value==="10th";
+    if(stream){
+      if(lower){ stream.value="All"; stream.disabled=true; }
+      else { stream.disabled=false; }
+    }
+  }
+  cls?.addEventListener("change",sync);
+  sync();
+})();
+
+document.getElementById("quizForm")
+.addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  clearMsg("quizMsg");
+
+  try{
+
+    const payload={
+      title:
+        document.getElementById("quizTitle").value.trim(),
+
+      description:
+        document.getElementById("quizDescription").value.trim(),
+
+      class:
+        document.getElementById("quizClass").value,
+
+      stream:
+        document.getElementById("quizStream").value,
+
+      duration_minutes:
+        Number(document.getElementById("quizDuration").value)||30,
+
+      total_questions:0,
+      published:false,
+      is_published:false,
+
+      subject:
+        document.getElementById("quizSubject").value.trim()
+        ||null
+    };
+
+    const {data,error}=
+      await supabaseClient
+        .from("quizzes")
+        .insert(payload)
+        .select()
+        .single();
+
+    if(error)throw error;
+
+    setMsg(
+      "quizMsg",
+      "Quiz created. Add questions from the Quiz list.",
+      "ok"
+    );
+
+    this.reset();
+
+    document.getElementById("quizDuration").value=30;
+
+    loadQuizzes();
+    loadDashboard();
+
+    if(data)openQuizBuilder(data);
+
+  }catch(err){
+
+    console.error(err);
+
+    setMsg(
+      "quizMsg",
+      "Quiz error: "+err.message
+    );
+  }
+});
+
+async function loadQuizzes(){
+
+  const target=
+    document.getElementById("quizTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading quizzes...</div>';
+
+  const {data,error}=
+    await supabaseClient
+      .from("quizzes")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  quizzes=safeArray(data);
+
+  if(!quizzes.length){
+    target.innerHTML=
+      '<div class="empty">No quizzes found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Quiz</th>
+    <th>Class</th>
+    <th>Stream</th>
+    <th>Subject</th>
+    <th>Questions</th>
+    <th>Published</th>
+    <th>Actions</th>
+  </tr>
+  </thead><tbody>`;
+
+  quizzes.forEach(q=>{
+
+    html+=`
+    <tr>
+      <td><b>${esc(q.title)}</b></td>
+      <td>${esc(q.class)}</td>
+      <td>${esc(q.stream)}</td>
+      <td>${esc(q.subject)}</td>
+      <td>${esc(q.total_questions)}</td>
+      <td>
+        <span class="badge ${q.published||q.is_published?"green":"yellow"}">
+          ${q.published||q.is_published?"YES":"DRAFT"}
+        </span>
+      </td>
+      <td>
+        <div class="actions">
+          <button class="secondary"
+            onclick='openQuizBuilder(${JSON.stringify(q)})'>
+            Questions
+          </button>
+          <button class="secondary"
+            onclick="toggleQuiz('${q.id}',${!!(q.published||q.is_published)})">
+            ${q.published||q.is_published?"Unpublish":"Publish"}
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+async function toggleQuiz(id,current){
+
+  const patch={
+    published:!current,
+    is_published:!current
+  };
+
+  const {error}=
+    await supabaseClient
+      .from("quizzes")
+      .update(patch)
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  toast("Quiz status updated");
+  loadQuizzes();
+}
+
+async function openQuizBuilder(q){
+
+  const {data,error}=
+    await supabaseClient
+      .from("quiz_questions")
+      .select("*")
+      .eq("quiz_id",q.id)
+      .order("id");
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  let rows="";
+
+  safeArray(data).forEach((x,i)=>{
+
+    rows+=`
+    <div class="panel" style="margin-top:12px">
+      <b>Q${i+1}. ${esc(x.question || x.question_text)}</b>
+      <div style="margin-top:8px;color:#999">
+        A: ${esc(x.option_a)} |
+        B: ${esc(x.option_b)} |
+        C: ${esc(x.option_c)} |
+        D: ${esc(x.option_d)}
+      </div>
+      <div style="margin-top:7px;color:#55e7a7">
+        Correct: ${esc(x.correct_answer)}
+        • ${esc(x.marks)} marks
+      </div>
+      <button class="danger"
+        style="margin-top:10px"
+        onclick="deleteQuizQuestion(${x.id},${q.id})">
+        Delete
+      </button>
+    </div>`;
+  });
+
+  showModal(
+    "Quiz Builder — "+q.title,
+    `
+    <form id="questionForm">
+      <div class="grid">
+
+      <div class="full">
+      <label>Question *</label>
+      <textarea id="qqQuestion" required></textarea>
+      </div>
+
+      <div>
+      <label>Option A *</label>
+      <input id="qqA" required>
+      </div>
+
+      <div>
+      <label>Option B *</label>
+      <input id="qqB" required>
+      </div>
+
+      <div>
+      <label>Option C *</label>
+      <input id="qqC" required>
+      </div>
+
+      <div>
+      <label>Option D *</label>
+      <input id="qqD" required>
+      </div>
+
+      <div>
+      <label>Correct Answer *</label>
+      <select id="qqCorrect">
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+      </div>
+
+      <div>
+      <label>Marks</label>
+      <input id="qqMarks" type="number" value="2" min="1">
+      </div>
+
+      </div>
+
+      <button class="primary"
+        style="width:auto;margin-top:15px">
+        ADD QUESTION
+      </button>
+    </form>
+
+    <hr style="border-color:#292929;margin:25px 0">
+
+    <h4>Existing Questions</h4>
+
+    ${rows || '<div class="empty">No questions yet.</div>'}
+    `
+  );
+
+  document.getElementById("questionForm")
+  .addEventListener("submit",async function(e){
+
+    e.preventDefault();
+
+    const payload={
+      quiz_id:q.id,
+      question:
+        document.getElementById("qqQuestion").value.trim(),
+      question_text:
+        document.getElementById("qqQuestion").value.trim(),
+      option_a:
+        document.getElementById("qqA").value.trim(),
+      option_b:
+        document.getElementById("qqB").value.trim(),
+      option_c:
+        document.getElementById("qqC").value.trim(),
+      option_d:
+        document.getElementById("qqD").value.trim(),
+      correct_answer:
+        document.getElementById("qqCorrect").value,
+      marks:
+        Number(document.getElementById("qqMarks").value)||2
+    };
+
+    const {error}=await supabaseClient
+      .from("quiz_questions")
+      .insert(payload);
+
+    if(error){
+      toast(error.message);
+      return;
+    }
+
+    const {count}=await supabaseClient
+      .from("quiz_questions")
+      .select("*",{count:"exact",head:true})
+      .eq("quiz_id",q.id);
+
+    await supabaseClient
+      .from("quizzes")
+      .update({
+        total_questions:count||0
+      })
+      .eq("id",q.id);
+
+    toast("Question added");
+
+    closeModal();
+    loadQuizzes();
+  });
+}
+
+async function deleteQuizQuestion(id,quizId){
+
+  if(!confirm("Delete this question?"))return;
+
+  const {error}=
+    await supabaseClient
+      .from("quiz_questions")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  const {count}=await supabaseClient
+    .from("quiz_questions")
+    .select("*",{count:"exact",head:true})
+    .eq("quiz_id",quizId);
+
+  await supabaseClient
+    .from("quizzes")
+    .update({
+      total_questions:count||0
+    })
+    .eq("id",quizId);
+
+  toast("Question deleted");
+  closeModal();
+  loadQuizzes();
+}
+
+/* =====================================================
+   SPECIAL TESTS
+===================================================== */
+
+(function setupSpecialClassControls(){
+  const cls=document.getElementById("specialClass");
+  const stream=document.getElementById("specialStream");
+  function sync(){
+    const lower=cls?.value==="9th" || cls?.value==="10th";
+    if(stream){
+      if(lower){ stream.value=""; stream.disabled=true; }
+      else { stream.disabled=false; }
+    }
+  }
+  cls?.addEventListener("change",sync);
+  sync();
+})();
+
+document.getElementById("specialForm")
+.addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  clearMsg("specialMsg");
+
+  try{
+
+    const startDate=
+      document.getElementById("specialStartDate").value;
+
+    const startTime=
+      document.getElementById("specialStartTime").value;
+
+    const endDate=
+      document.getElementById("specialEndDate").value;
+
+    const endTime=
+      document.getElementById("specialEndTime").value;
+
+    const startAt=
+      `${startDate}T${startTime}:00`;
+
+    const endAt=
+      `${endDate}T${endTime}:00`;
+
+    const payload={
+
+      title:
+        document.getElementById("specialTitle").value.trim(),
+
+      subject:
+        document.getElementById("specialSubject").value.trim()
+        ||null,
+
+      class:
+        document.getElementById("specialClass").value,
+
+      stream:
+        document.getElementById("specialStream").value,
+
+      start_date:startDate,
+      start_time:startTime,
+      end_date:endDate,
+      end_time:endTime,
+
+      start_at:startAt,
+      end_at:endAt,
+
+      duration_minutes:
+        Number(document.getElementById("specialDuration").value)
+        ||null,
+
+      total_questions:0,
+      total_marks:0,
+
+      status:"draft",
+      is_published:false,
+
+      instructions:
+        document.getElementById("specialInstructions").value.trim()
+        ||null,
+
+      created_by:
+        currentUser ? currentUser.id : null
+    };
+
+    const {data,error}=
+      await supabaseClient
+        .from("special_tests")
+        .insert(payload)
+        .select()
+        .single();
+
+    if(error)throw error;
+
+    setMsg(
+      "specialMsg",
+      "Special Test created successfully. Add questions next.",
+      "ok"
+    );
+
+    this.reset();
+
+    loadSpecialTests();
+    loadDashboard();
+
+    if(data)openSpecialBuilder(data);
+
+  }catch(err){
+
+    console.error(err);
+
+    setMsg(
+      "specialMsg",
+      "Special Test error: "+err.message
+    );
+  }
+});
+
+async function loadSpecialTests(){
+
+  const target=
+    document.getElementById("specialTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading special tests...</div>';
+
+  const {data,error}=
+    await supabaseClient
+      .from("special_tests")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  specialTests=safeArray(data);
+
+  if(!specialTests.length){
+    target.innerHTML=
+      '<div class="empty">No Special Tests found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Test</th>
+    <th>Class</th>
+    <th>Stream</th>
+    <th>Schedule</th>
+    <th>Questions</th>
+    <th>Marking</th>
+    <th>Status</th>
+    <th>Actions</th>
+  </tr>
+  </thead><tbody>`;
+
+  specialTests.forEach(t=>{
+
+    const published=t.is_published===true;
+
+    html+=`
+    <tr>
+      <td><b>${esc(t.title)}</b></td>
+      <td>${esc(t.class)}</td>
+      <td>${esc(t.stream)}</td>
+      <td>
+        ${esc(t.start_date)} ${esc(t.start_time)}
+        →
+        ${esc(t.end_date)} ${esc(t.end_time)}
+      </td>
+      <td>${esc(t.total_questions||0)}</td>
+      <td>
+        <span class="badge ${t.negative_marking_enabled===true?"green":"yellow"}">
+          ${t.negative_marking_enabled===true
+            ?"NEGATIVE −"+Number(t.negative_marks||0).toFixed(2)
+            :"NO NEGATIVE"}
+        </span>
+      </td>
+      <td>
+        <span class="badge ${published?"green":"yellow"}">
+          ${published?"PUBLISHED":"DRAFT"}
+        </span>
+      </td>
+      <td>
+        <div class="actions">
+          <button class="secondary"
+            onclick='openSpecialBuilder(${JSON.stringify(t)})'>
+            Questions
+          </button>
+
+          <button class="secondary"
+            onclick="openMarkingSettings(${JSON.stringify(t).replace(/"/g,'&quot;')})">
+            ⚙ Marking Settings
+          </button>
+
+          <button class="secondary"
+            onclick="toggleSpecial('${t.id}',${published})">
+            ${published?"Unpublish":"Publish"}
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+async function toggleSpecial(id,current){
+
+  const {error}=
+    await supabaseClient
+      .from("special_tests")
+      .update({
+        is_published:!current,
+        status:!current?"scheduled":"draft"
+      })
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  toast("Special Test status updated");
+  loadSpecialTests();
+}
+
+
+/* =====================================================
+   SPECIAL TEST — MARKING SETTINGS
+   Existing tests are never recalculated. These settings
+   are only stored against the selected test.
+===================================================== */
+
+function markingNumber(value){
+  const n=Number(value);
+  if(!Number.isFinite(n) || n<0) return 0;
+  return Math.round(n*100)/100;
+}
+
+function updateMarkingSettingsUI(){
+  const on=document.getElementById("tsNegativeEnabled");
+  const box=document.getElementById("tsNegativeFields");
+  const state=document.getElementById("tsNegativeState");
+  if(!on || !box || !state)return;
+
+  box.style.display=on.checked?"block":"none";
+  state.textContent=on.checked?"ON":"OFF";
+  state.className="ts-marking-state"+(on.checked?" on":"");
+}
+
+function updateMarkingPreview(){
+  const enabled=document.getElementById("tsNegativeEnabled");
+  const neg=document.getElementById("tsNegativeMarks");
+  const preview=document.getElementById("tsMarkingPreviewText");
+  if(!preview)return;
+
+  const n=markingNumber(neg ? neg.value : 0);
+  preview.textContent=enabled && enabled.checked
+    ? "Wrong answer: −"+n.toFixed(2)+" marks"
+    : "Negative marking disabled";
+}
+
+async function openMarkingSettings(test){
+  if(!test || !test.id){
+    toast("Test information unavailable");
+    return;
+  }
+
+  /* Always fetch the current row first so the popup never uses
+     stale table data. */
+  const {data,error}=await supabaseClient
+    .from("special_tests")
+    .select("*")
+    .eq("id",test.id)
+    .maybeSingle();
+
+  if(error){
+    toast("Unable to load marking settings: "+error.message);
+    return;
+  }
+
+  const t=data||test;
+  const enabled=t.negative_marking_enabled===true;
+  const negativeMarks=markingNumber(t.negative_marks);
+
+  showModal(
+    "Marking Settings — "+(t.title||"Special Test"),
+    `
+    <div class="ts-marking-settings">
+
+      <div class="ts-marking-warning">
+        <b>Important:</b> These settings belong only to this Special Test.
+        Existing submitted/declared results are not recalculated by this panel.
+        Negative marking applies only when the test's marking engine processes
+        a new submission.
+      </div>
+
+      <div class="ts-marking-card">
+        <div class="ts-marking-head">
+          <div>
+            <div class="ts-marking-title">Negative Marking</div>
+            <div class="ts-marking-sub">
+              गलत answer पर निर्धारित marks घटेंगे।
+            </div>
+          </div>
+
+          <label class="ts-switch" title="Negative Marking ON/OFF">
+            <input id="tsNegativeEnabled" type="checkbox"
+                   ${enabled?"checked":""}
+                   onchange="updateMarkingSettingsUI();updateMarkingPreview()">
+            <span class="ts-slider"></span>
+          </label>
+        </div>
+
+        <span id="tsNegativeState"
+              class="ts-marking-state ${enabled?"on":""}">
+          ${enabled?"ON":"OFF"}
+        </span>
+      </div>
+
+      <div id="tsNegativeFields" class="panel"
+           style="margin-bottom:16px;display:${enabled?"block":"none"}">
+        <label>Negative Marks Per Wrong Answer *</label>
+        <select id="tsNegativeMarksPreset"
+                onchange="applyNegativeMarksPreset(this.value)">
+          <option value="">Select / Custom</option>
+          <option value="0.25" ${negativeMarks===0.25?"selected":""}>0.25</option>
+          <option value="0.50" ${negativeMarks===0.5?"selected":""}>0.50</option>
+          <option value="1.00" ${negativeMarks===1?"selected":""}>1.00</option>
+          <option value="custom">Custom</option>
+        </select>
+
+        <div style="height:10px"></div>
+
+        <label>Negative Marks</label>
+        <input id="tsNegativeMarks"
+               type="number"
+               min="0"
+               max="100"
+               step="0.01"
+               value="${negativeMarks.toFixed(2)}"
+               oninput="updateMarkingPreview()">
+
+        <div class="ts-marking-preview">
+          <div>
+            <b id="tsMarkingPreviewText">
+              ${enabled
+                ? "Wrong answer: −"+negativeMarks.toFixed(2)+" marks"
+                : "Negative marking disabled"}
+            </b>
+            <small>Incorrect answer</small>
+          </div>
+          <div>
+            <b>0 marks</b>
+            <small>Unanswered</small>
+          </div>
+          <div>
+            <b>Question marks</b>
+            <small>Correct answer — each question keeps its own marks</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-bottom:8px">Current Test</h3>
+        <div style="color:#999;font-size:13px;line-height:1.7">
+          <div><b style="color:#fff">Questions:</b> ${esc(t.total_questions||0)}</div>
+          <div><b style="color:#fff">Total Marks:</b> ${esc(t.total_marks??0)}</div>
+          <div><b style="color:#fff">Status:</b> ${esc(t.status||"—")}</div>
+        </div>
+      </div>
+
+      <div class="ts-setting-save">
+        <button type="button" class="secondary" onclick="closeModal()">Cancel</button>
+        <button type="button" class="primary"
+                style="width:auto"
+                onclick="saveMarkingSettings('${String(t.id).replace(/'/g,"\\\\'")}')">
+          SAVE MARKING SETTINGS
+        </button>
+      </div>
+
+    </div>
+    `
+  );
+
+  updateMarkingSettingsUI();
+  updateMarkingPreview();
+
+  const preset=document.getElementById("tsNegativeMarksPreset");
+  if(preset && !["0.25","0.50","1.00"].includes(negativeMarks.toFixed(2))){
+    preset.value="custom";
+  }
+}
+
+function applyNegativeMarksPreset(value){
+  const input=document.getElementById("tsNegativeMarks");
+  if(!input)return;
+  if(value==="0.25" || value==="0.50" || value==="1.00"){
+    input.value=Number(value).toFixed(2);
+  }
+  updateMarkingPreview();
+}
+
+async function saveMarkingSettings(testId){
+  if(!testId)return;
+
+  const enabled=document.getElementById("tsNegativeEnabled")?.checked===true;
+  const raw=document.getElementById("tsNegativeMarks")?.value;
+  const negativeMarks=markingNumber(raw);
+
+  if(enabled && negativeMarks<=0){
+    toast("Negative marks must be greater than 0 when Negative Marking is ON.");
+    return;
+  }
+
+  const button=document.querySelector("#modalBody button[onclick*='saveMarkingSettings']");
+  if(button){
+    button.disabled=true;
+    button.textContent="SAVING...";
+  }
+
+  try{
+    const {error}=await supabaseClient
+      .from("special_tests")
+      .update({
+        negative_marking_enabled:enabled,
+        negative_marks:enabled?negativeMarks:0
+      })
+      .eq("id",testId);
+
+    if(error)throw error;
+
+    toast(enabled
+      ? "Negative Marking enabled for this Special Test."
+      : "Negative Marking disabled for this Special Test."
+    );
+
+    closeModal();
+    await loadSpecialTests();
+  }catch(err){
+    console.error("Marking settings error:",err);
+    toast("Marking Settings save failed: "+(err.message||String(err)));
+    if(button){
+      button.disabled=false;
+      button.textContent="SAVE MARKING SETTINGS";
+    }
+  }
+}
+
+async function openSpecialBuilder(test){
+
+  const {data,error}=
+    await supabaseClient
+      .from("special_test_questions")
+      .select("*")
+      .eq("test_id",test.id)
+      .order("question_order");
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  let rows="";
+
+  safeArray(data).forEach((q,i)=>{
+
+    rows+=`
+    <div class="panel">
+      <b>Q${i+1}. ${esc(q.question_text)}</b>
+
+      <div style="margin-top:8px;color:#999">
+        A: ${esc(q.option_a)} |
+        B: ${esc(q.option_b)} |
+        C: ${esc(q.option_c)} |
+        D: ${esc(q.option_d)}
+      </div>
+
+      <div style="margin-top:7px;color:#55e7a7">
+        Correct: ${esc(q.correct_option||q.correct_answer)}
+        • ${esc(q.marks)} marks
+      </div>
+
+      <button class="danger"
+        style="margin-top:10px"
+        onclick="deleteSpecialQuestion('${q.id}','${test.id}')">
+        Delete
+      </button>
+    </div>`;
+  });
+
+  showModal(
+    "Special Test Builder — "+test.title,
+    `
+    <div class="panel">
+      <b>Schedule</b>
+      <p style="color:#999">
+        ${esc(test.start_date)} ${esc(test.start_time)}
+        →
+        ${esc(test.end_date)} ${esc(test.end_time)}
+      </p>
+    </div>
+
+    <form id="specialQuestionForm">
+
+    <div class="grid">
+
+    <div class="full">
+    <label>Question *</label>
+    <textarea id="sqQuestion" required></textarea>
+    </div>
+
+    <div>
+    <label>Option A *</label>
+    <input id="sqA" required>
+    </div>
+
+    <div>
+    <label>Option B *</label>
+    <input id="sqB" required>
+    </div>
+
+    <div>
+    <label>Option C</label>
+    <input id="sqC">
+    </div>
+
+    <div>
+    <label>Option D</label>
+    <input id="sqD">
+    </div>
+
+    <div>
+    <label>Correct Answer *</label>
+    <select id="sqCorrect">
+      <option value="A">A</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+      <option value="D">D</option>
+    </select>
+    </div>
+
+    <div>
+    <label>Marks</label>
+    <input id="sqMarks" type="number" value="2" min="0.01" step="0.01">
+    </div>
+
+    </div>
+
+    <button class="primary"
+      style="width:auto;margin-top:15px">
+      ADD QUESTION
+    </button>
+
+    </form>
+
+    <hr style="border-color:#292929;margin:25px 0">
+
+    <h4>Questions</h4>
+
+    ${rows || '<div class="empty">No questions yet.</div>'}
+    `
+  );
+
+  document.getElementById("specialQuestionForm")
+  .addEventListener("submit",async function(e){
+
+    e.preventDefault();
+
+    const questionCount=
+      safeArray(data).length;
+
+    const payload={
+
+      test_id:test.id,
+
+      question_order:
+        questionCount+1,
+
+      question_text:
+        document.getElementById("sqQuestion").value.trim(),
+
+      option_a:
+        document.getElementById("sqA").value.trim(),
+
+      option_b:
+        document.getElementById("sqB").value.trim(),
+
+      option_c:
+        document.getElementById("sqC").value.trim()
+        ||null,
+
+      option_d:
+        document.getElementById("sqD").value.trim()
+        ||null,
+
+      correct_option:
+        document.getElementById("sqCorrect").value,
+
+      correct_answer:
+        document.getElementById("sqCorrect").value,
+
+      marks:
+        Number(document.getElementById("sqMarks").value)||1
+    };
+
+    const {error}=
+      await supabaseClient
+        .from("special_test_questions")
+        .insert(payload);
+
+    if(error){
+      toast(error.message);
+      return;
+    }
+
+    const {count}=await supabaseClient
+      .from("special_test_questions")
+      .select("*",{count:"exact",head:true})
+      .eq("test_id",test.id);
+
+    const {data:questions}=await supabaseClient
+      .from("special_test_questions")
+      .select("marks")
+      .eq("test_id",test.id);
+
+    const totalMarks=safeArray(questions)
+      .reduce((sum,q)=>sum+(Number(q.marks)||0),0);
+
+    await supabaseClient
+      .from("special_tests")
+      .update({
+        total_questions:count||0,
+        total_marks:totalMarks
+      })
+      .eq("id",test.id);
+
+    toast("Special Test question added");
+
+    closeModal();
+    loadSpecialTests();
+  });
+}
+
+async function deleteSpecialQuestion(id,testId){
+
+  if(!confirm("Delete this question?"))return;
+
+  const {error}=
+    await supabaseClient
+      .from("special_test_questions")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  const {data}=await supabaseClient
+    .from("special_test_questions")
+    .select("marks")
+    .eq("test_id",testId);
+
+  const rows=safeArray(data);
+
+  await supabaseClient
+    .from("special_tests")
+    .update({
+      total_questions:rows.length,
+      total_marks:
+        rows.reduce(
+          (sum,q)=>sum+(Number(q.marks)||0),0
+        )
+    })
+    .eq("id",testId);
+
+  toast("Question deleted");
+  closeModal();
+  loadSpecialTests();
+}
+
+/* =====================================================
+   RESULTS
+===================================================== */
+
+async function loadResults(){
+
+  const target=
+    document.getElementById("resultsTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading results...</div>';
+
+  const {data,error}=
+    await supabaseClient
+      .from("special_test_results")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  if(!data.length){
+    target.innerHTML=
+      '<div class="empty">No special test results found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Student</th>
+    <th>Test</th>
+    <th>Marks</th>
+    <th>Total</th>
+    <th>Status</th>
+    <th>Action</th>
+  </tr>
+  </thead><tbody>`;
+
+  data.forEach(r=>{
+
+    const declared=
+      r.is_declared===true ||
+      r.status==="declared" ||
+      r.result_status==="declared";
+
+    html+=`
+    <tr>
+      <td>${esc(r.student_id||r.student_code||"—")}</td>
+      <td>${esc(r.test_id||"—")}</td>
+      <td>${esc(r.marks??r.score??"—")}</td>
+      <td>${esc(r.total_marks??"—")}</td>
+      <td>
+        <span class="badge ${declared?"green":"yellow"}">
+          ${declared?"DECLARED":"PENDING"}
+        </span>
+      </td>
+      <td>
+        ${!declared?
+        `<button class="success"
+          onclick="declareResult('${esc(r.id)}')">
+          Declare Result
+        </button>`:""}
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+async function declareResult(id){
+
+  const remark=prompt("Student के लिए Advice / Remark (optional):","");
+  if(remark===null) return;
+  const {error}=
+    await supabaseClient
+      .from("special_test_results")
+      .update({
+        is_declared:true,
+        status:"declared",
+        result_status:"declared",
+        result_remarks:remark.trim()||null
+      })
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  toast("Result declared");
+  loadResults();
+  loadDashboard();
+}
+
+/* =====================================================
+   NOTICES
+===================================================== */
+
+(function setupNoticeClassControls(){
+  const cls=document.getElementById("noticeClass");
+  const stream=document.getElementById("noticeStream");
+  function sync(){
+    const lower=cls?.value==="9th" || cls?.value==="10th";
+    if(stream){
+      if(lower){ stream.value=""; stream.disabled=true; }
+      else { stream.disabled=false; }
+    }
+  }
+  cls?.addEventListener("change",sync);
+  sync();
+})();
+
+document.getElementById("noticeForm")
+.addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  clearMsg("noticeMsg");
+
+  try{
+
+    const payload={
+
+      title:
+        document.getElementById("noticeTitle").value.trim(),
+
+      description:
+        document.getElementById("noticeDescription").innerHTML.trim()
+        ||null,
+
+      image_url:
+        document.getElementById("noticeImage").value.trim()
+        ||null,
+
+      target_class:
+        document.getElementById("noticeClass").value
+        ||null,
+
+      target_stream:
+        document.getElementById("noticeStream").value
+        ||null,
+
+      is_published:true
+    };
+
+    const {error}=
+      await supabaseClient
+        .from("notices")
+        .insert(payload);
+
+    if(error)throw error;
+
+    setMsg(
+      "noticeMsg",
+      "Notice published successfully.",
+      "ok"
+    );
+
+    this.reset();
+
+    loadNotices();
+    loadDashboard();
+
+  }catch(err){
+
+    console.error(err);
+
+    setMsg(
+      "noticeMsg",
+      "Notice error: "+err.message
+    );
+  }
+});
+
+async function loadNotices(){
+
+  const target=
+    document.getElementById("noticesTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading notices...</div>';
+
+  const {data,error}=
+    await supabaseClient
+      .from("notices")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  notices=safeArray(data);
+
+  if(!notices.length){
+    target.innerHTML=
+      '<div class="empty">No notices found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Title</th>
+    <th>Class</th>
+    <th>Stream</th>
+    <th>Published</th>
+    <th>Date</th>
+    <th>Action</th>
+  </tr>
+  </thead><tbody>`;
+
+  notices.forEach(n=>{
+
+    html+=`
+    <tr>
+      <td>${esc(n.title)}</td>
+      <td>${esc(n.target_class||"All")}</td>
+      <td>${esc(n.target_stream||"All")}</td>
+      <td>
+        <span class="badge ${n.is_published?"green":"red"}">
+          ${n.is_published?"Published":"Hidden"}
+        </span>
+      </td>
+      <td>${esc(formatDate(n.created_at))}</td>
+      <td>
+        <button class="danger"
+          onclick="deleteNotice(${n.id})">
+          Delete
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+async function deleteNotice(id){
+
+  if(!confirm("Delete this notice?"))return;
+
+  const {error}=
+    await supabaseClient
+      .from("notices")
+      .delete()
+      .eq("id",id);
+
+  if(error){
+    toast(error.message);
+    return;
+  }
+
+  toast("Notice deleted");
+  loadNotices();
+  loadDashboard();
+}
+
+/* =====================================================
+   SUPPORT QUERIES
+   IMPORTANT: uses query_text, NOT message
+===================================================== */
+
+async function loadQueries(){
+
+  const target=
+    document.getElementById("queriesTable");
+
+  target.innerHTML=
+    '<div class="empty">Loading support queries...</div>';
+
+  const {data,error}=
+    await supabaseClient
+      .from("support_queries")
+      .select("*")
+      .order("created_at",{ascending:false});
+
+  if(error){
+    target.innerHTML=
+      '<div class="empty">'+esc(error.message)+'</div>';
+    return;
+  }
+
+  queries=safeArray(data);
+
+  if(!queries.length){
+    target.innerHTML=
+      '<div class="empty">No support queries found.</div>';
+    return;
+  }
+
+  let html=`
+  <div class="table-wrap">
+  <table>
+  <thead>
+  <tr>
+    <th>Student</th>
+    <th>Student ID</th>
+    <th>Subject</th>
+    <th>Query</th>
+    <th>Status</th>
+    <th>Date</th>
+    <th>Action</th>
+  </tr>
+  </thead><tbody>`;
+
+  queries.forEach(q=>{
+
+    html+=`
+    <tr>
+      <td>${esc(q.student_name)}</td>
+      <td>${esc(q.student_code||"—")}</td>
+      <td>${esc(q.subject||"—")}</td>
+      <td style="max-width:300px;white-space:normal">
+        ${esc(q.query_text)}
+      </td>
+      <td>
+        <span class="badge ${
+          q.status==="Resolved"
+          ?"green"
+          :q.status==="In Review"
+          ?"yellow"
+          :"red"
+        }">
+          ${esc(q.status)}
+        </span>
+      </td>
+      <td>${esc(formatDate(q.created_at))}</td>
+      <td>
+        <button class="secondary"
+          onclick='replyQuery(${JSON.stringify(q)})'>
+          Reply
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  html+="</tbody></table></div>";
+
+  target.innerHTML=html;
+}
+
+function replyQuery(q){
+
+  showModal(
+    "Student Support Query",
+    `
+    <div class="panel">
+      <b>Student:</b> ${esc(q.student_name)}<br>
+      <b>Student ID:</b> ${esc(q.student_code||"—")}<br>
+      <b>Subject:</b> ${esc(q.subject||"—")}<br><br>
+      <b>Query:</b>
+      <div style="margin-top:8px;color:#aaa">
+        ${esc(q.query_text)}
+      </div>
+    </div>
+
+    <form id="replyForm">
+
+      <div class="form-group">
+        <label>Admin Reply</label>
+        <textarea id="adminReply"
+          required>${esc(q.admin_reply||"")}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Status</label>
+        <select id="queryStatus">
+          <option ${q.status==="Pending"?"selected":""}>
+            Pending
+          </option>
+          <option ${q.status==="In Review"?"selected":""}>
+            In Review
+          </option>
+          <option ${q.status==="Resolved"?"selected":""}>
+            Resolved
+          </option>
+        </select>
+      </div>
+
+      <button class="primary" style="width:auto">
+        SAVE REPLY
+      </button>
+
+    </form>
+    `
+  );
+
+  document.getElementById("replyForm")
+  .addEventListener("submit",async function(e){
+
+    e.preventDefault();
+
+    const {error}=
+      await supabaseClient
+        .from("support_queries")
+        .update({
+          admin_reply:
+            document.getElementById("adminReply").value.trim(),
+          status:
+            document.getElementById("queryStatus").value
+        })
+        .eq("id",q.id);
+
+    if(error){
+      toast(error.message);
+      return;
+    }
+
+    toast("Reply saved");
+    closeModal();
+    loadQueries();
+    loadDashboard();
+  });
+}
+
+/* =====================================================
+   BRANDING
+===================================================== */
+
+async function loadBranding(){
+
+  try{
+
+    const {data,error}=
+      await supabaseClient.storage
+        .from("branding")
+        .list("",{
+          limit:100
+        });
+
+    if(error){
+      console.warn("Branding list:",error.message);
+      return;
+    }
+
+    const files=safeArray(data);
+
+    const logo=
+      files.find(x=>
+        /logo/i.test(x.name)
+      );
+
+    const signature=
+      files.find(x=>
+        /signature|sign/i.test(x.name)
+      );
+
+    if(logo){
+      const {data:url}=supabaseClient.storage.from("branding").getPublicUrl(logo.name);
+      const logoUrl=url?.publicUrl;
+      if(logoUrl){
+        document.getElementById("currentLogo").src=logoUrl;
+        document.getElementById("loginLogo").src=logoUrl;
+      }
+    }
+
+    if(signature){
+
+      const {data:url}=
+        supabaseClient.storage
+          .from("branding")
+          .getPublicUrl(signature.name);
+
+      document.getElementById("currentSignature").src=
+        url.publicUrl;
+    }
+
+  }catch(err){
+
+    console.warn(err);
+  }
+}
+
+async function uploadBranding(type){
+
+  const input=
+    document.getElementById(
+      type==="logo"
+      ?"logoFile"
+      :"signatureFile"
+    );
+
+  const file=input.files[0];
+
+  if(!file){
+    toast("Select a file first.");
+    return;
+  }
+
+  const extension=
+    file.name.split(".").pop().toLowerCase();
+
+  const filename=
+    type==="logo"
+    ?`official-logo.${extension}`
+    :`sonpal-signature.${extension}`;
+
+  try{
+
+    const {error:uploadError}=
+      await supabaseClient.storage
+        .from("branding")
+        .upload(
+          filename,
+          file,
+          {
+            upsert:true,
+            contentType:file.type
+          }
+        );
+
+    if(uploadError)throw uploadError;
+
+    const {data:urlData}=
+      supabaseClient.storage
+        .from("branding")
+        .getPublicUrl(filename);
+
+    const url=urlData.publicUrl;
+
+    /*
+      site_settings / website_settings schemas can differ
+      between installations, so branding is primarily stored
+      in the public branding bucket and consumed from there.
+    */
+
+    try{
+
+      await supabaseClient
+        .from("website_settings")
+        .upsert({
+          id:type,
+          value:url
+        });
+
+    }catch(_){}
+
+    try{
+
+      await supabaseClient
+        .from("site_settings")
+        .upsert({
+          key:type,
+          value:url
+        });
+
+    }catch(_){}
+
+    toast(
+      type==="logo"
+      ?"Official Logo updated successfully."
+      :"Official Signature updated successfully."
+    );
+
+    loadBranding();
+
+  }catch(err){
+
+    console.error(err);
+
+    toast(
+      "Branding upload failed: "+err.message
+    );
+  }
+}
+
+/* =====================================================
+   ACTIVITY
+===================================================== */
+
+async function loadActivity(){
+
+  const target=
+    document.getElementById("activityInfo");
+
+  if(!currentAdmin){
+    target.textContent="No active admin session.";
+    return;
+  }
+
+  target.innerHTML=`
+    <div class="grid">
+
+      <div>
+        <label>Admin Name</label>
+        <div class="card">
+          ${esc(currentAdmin.full_name)}
+        </div>
+      </div>
+
+      <div>
+        <label>Role</label>
+        <div class="card">
+          <span class="badge red">
+            ${esc(currentAdmin.role)}
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <label>Admin ID</label>
+        <div class="card">
+          ${esc(currentAdmin.id)}
+        </div>
+      </div>
+
+      <div>
+        <label>Account</label>
+        <div class="card">
+          <span class="badge green">
+            ACTIVE
+          </span>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+document.getElementById("settingsForm")
+.addEventListener("submit",async function(e){
+
+  e.preventDefault();
+
+  clearMsg("settingsMsg");
+
+  const payload={
+    website_name:
+      document.getElementById("websiteName").value.trim(),
+
+    support_email:
+      document.getElementById("supportEmail").value.trim(),
+
+    support_mobile:
+      document.getElementById("supportMobile").value.trim(),
+
+    website_status:
+      document.getElementById("websiteStatus").value,
+
+    support_information:
+      document.getElementById("supportInfo").value.trim()
+  };
+
+  try{
+
+    /*
+      Try website_settings first.
+      The installation may use a JSON/settings schema,
+      so failure here should not crash the whole admin panel.
+    */
+
+    const {error}=
+      await supabaseClient
+        .from("website_settings")
+        .upsert({
+          id:"general",
+          ...payload
+        });
+
+    if(error)throw error;
+
+    const {error:waError}=await supabaseClient
+      .from("website_settings")
+      .upsert({id:"whatsapp_group",value:whatsapp||null});
+    if(waError) throw waError;
+
+    setMsg(
+      "settingsMsg",
+      "Website settings और WhatsApp Group link saved.",
+      "ok"
+    );
+
+  }catch(err){
+
+    setMsg(
+      "settingsMsg",
+      "Settings error: "+err.message
+    );
+  }
+});
+
+async function loadWebsiteSettings(){
+  try{
+    const r=await supabaseClient.from("website_settings").select("*").eq("id","general").maybeSingle();
+    if(!r.error&&r.data){
+      document.getElementById("websiteName").value=r.data.website_name||"TECH SUPPORT";
+      document.getElementById("supportEmail").value=r.data.support_email||"";
+      document.getElementById("supportMobile").value=r.data.support_mobile||"";
+      document.getElementById("websiteStatus").value=r.data.website_status||"online";
+      document.getElementById("supportInfo").value=r.data.support_information||"";
+    }
+    const w=await supabaseClient.from("website_settings").select("value").eq("id","whatsapp_group").maybeSingle();
+    if(!w.error){
+      const el=document.getElementById("whatsappGroupLink");
+      if(el) el.value=w.data?.value||"";
+    }
+  }catch(e){console.warn("Website settings load:",e.message)}
+}
+
+window.formatNotice=function(command){
+  const editor=document.getElementById("noticeDescription");
+  if(!editor)return;
+  editor.focus();
+  document.execCommand(command,false,null);
+};
+
+window.tsShowThankYou=function(name){
+  document.getElementById("tsThankYouOverlay")?.remove();
+  const el=document.createElement("div");
+  el.id="tsThankYouOverlay";
+  el.innerHTML=`<div class="ts-fireworks">${Array.from({length:18},(_,i)=>'<span style="--i:'+i+'">✦</span>').join('')}</div><div class="ts-flowers">🌸 🌼 🌺 🌻 🌷</div><div class="ts-thank-title">${esc(name)}</div><div class="ts-thank-sub">Thank You</div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),10000);
+};
+
+/* =====================================================
+   INIT
+===================================================== */
+
+(async function(){
+
+  try{ await loadBranding(); }catch(_){ }
+
+  try{
+
+    const {data,error}=
+      await supabaseClient
+        .from("admin_users")
+        .select("id")
+        .limit(1);
+
+    if(error){
+      console.warn(
+        "Database check:",
+        error.message
+      );
+    }
+
+  }catch(err){
+    console.warn(err);
+  }
+
+  await checkSession();
+  try{ await loadWebsiteSettings(); }catch(_){}
+
+})();
+</script>
+
+
+<!-- =========================================================
+ TECH SUPPORT BLUEPRINT OVERRIDES — ADMIN PANEL
+ ========================================================= -->
+<style>
+.ts-admin-toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.ts-admin-toolbar button{width:auto!important}.ts-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:99999;padding:18px}.ts-admin-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;background:#111;border:1px solid #333;border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}.ts-admin-modal h3{margin-top:0}.ts-admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.ts-admin-grid .full{grid-column:1/-1}.ts-admin-modal input,.ts-admin-modal textarea,.ts-admin-modal select{width:100%;padding:10px;background:#080808;color:#fff;border:1px solid #333;border-radius:8px}.ts-admin-modal label{display:block;color:#aaa;font-size:12px;margin-bottom:5px}.ts-check{width:18px;height:18px}.ts-small{font-size:12px;color:#999}.ts-hold{color:#f0b429}.ts-declared{color:#20c77a}.ts-admin-row-actions{display:flex;flex-wrap:wrap;gap:6px}.ts-admin-row-actions button{width:auto!important}
+.ts-sign-upload-row{display:flex;align-items:center;gap:10px;margin-top:8px;min-height:48px}.ts-sign-preview{display:none;width:150px;height:52px;object-fit:contain;background:#fff;border:1px solid #444;border-radius:7px;padding:4px}.ts-sign-preview[src]{display:block}.ts-upload-status{font-size:11px;color:#888}.ts-admin-modal input[type=file]{padding:7px;background:#080808}.ts-admin-modal input[type=file]::file-selector-button{padding:7px 10px;border:0;border-radius:6px;cursor:pointer}
+.ts-status-pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800}.ts-pending{background:#3a2d08;color:#f0b429}.ts-decl{background:#0c3624;color:#20c77a}
+@media(max-width:700px){.ts-admin-grid{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+ const escA=window.esc|| (v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])));
+ const toastA=window.toast||((m)=>alert(m));
+ function maskMobile(v){const s=String(v||'');return s.length>=8?s.slice(0,4)+'****'+s.slice(-3):s.replace(/\d/g,'*')}
+ async function ensureXLSX(){if(window.XLSX)return;await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';s.onload=res;s.onerror=()=>rej(new Error('Excel library load नहीं हुई।'));document.head.appendChild(s)})}
+ async function getPending(){const r=await supabaseClient.rpc('get_pending_special_test_results');if(!r.error&&Array.isArray(r.data))return r.data;const q=await supabaseClient.from('special_test_results').select('*').eq('result_status','pending');return q.data||[]}
+ function closeA(){document.getElementById('tsAdminModal')?.remove()}
+ window.openAdminResultModal=function(ids){
+   const arr=Array.isArray(ids)?ids:[ids];
+   document.body.insertAdjacentHTML('beforeend',`<div class="ts-modal-overlay" id="tsAdminModal"><div class="ts-admin-modal"><h3>Declare Special Test Result</h3><p class="ts-small">Selected Results: ${arr.length}. Official marksheet में अधिकतम 3 invigilators और Founder/Tech Support signature दिखेगा.</p><div class="ts-admin-grid">
+<div><label>Invigilator 1 *</label><input id="tsInv1" placeholder="Invigilator name"></div>
+<div><label>Signature 1 *</label><input id="tsSigFile1" type="file" accept="image/png,image/jpeg,image/webp" onchange="previewInvSignature(1)"><div class="ts-sign-upload-row"><img id="tsSigPreview1" class="ts-sign-preview" alt="Signature 1 preview"><span id="tsSigStatus1" class="ts-upload-status">Choose signature image</span></div></div>
+<div><label>Invigilator 2</label><input id="tsInv2" placeholder="Invigilator name"></div>
+<div><label>Signature 2</label><input id="tsSigFile2" type="file" accept="image/png,image/jpeg,image/webp" onchange="previewInvSignature(2)"><div class="ts-sign-upload-row"><img id="tsSigPreview2" class="ts-sign-preview" alt="Signature 2 preview"><span id="tsSigStatus2" class="ts-upload-status">Optional</span></div></div>
+<div><label>Invigilator 3</label><input id="tsInv3" placeholder="Invigilator name"></div>
+<div><label>Signature 3</label><input id="tsSigFile3" type="file" accept="image/png,image/jpeg,image/webp" onchange="previewInvSignature(3)"><div class="ts-sign-upload-row"><img id="tsSigPreview3" class="ts-sign-preview" alt="Signature 3 preview"><span id="tsSigStatus3" class="ts-upload-status">Optional</span></div></div>
+<div class="full"><label>Remark / Advice (optional)</label><textarea id="tsDeclareRemark" rows="3" placeholder="यह remark student की marksheet पर दिखेगा।"></textarea></div>
+</div><div class="ts-admin-toolbar"><button class="primary" onclick='confirmBlueprintDeclare(${JSON.stringify(arr)})'>DECLARE SELECTED</button><button class="secondary" onclick="closeA()">CANCEL</button></div></div></div>`);
+ };
+ window.previewInvSignature=function(i){
+   const input=document.getElementById('tsSigFile'+i), img=document.getElementById('tsSigPreview'+i), status=document.getElementById('tsSigStatus'+i);
+   const file=input?.files?.[0];
+   if(!file){ if(img) img.removeAttribute('src'); if(status) status.textContent=i===1?'Signature required':'Optional'; return; }
+   if(!/^image\/(png|jpeg|webp)$/i.test(file.type)){ input.value=''; if(img) img.removeAttribute('src'); if(status) status.textContent='Only PNG/JPG/WEBP allowed'; return; }
+   if(file.size>2*1024*1024){ input.value=''; if(img) img.removeAttribute('src'); if(status) status.textContent='Maximum 2 MB'; return; }
+   if(img) img.src=URL.createObjectURL(file);
+   if(status) status.textContent=file.name+' • ready to upload';
+};
+async function uploadInvigilatorSignature(i,file){
+   const ext=(file.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,'');
+   const path='signatures/'+Date.now()+'-'+crypto.randomUUID()+'-invigilator-'+i+'.'+ext;
+   const up=await supabaseClient.storage.from('invigilator-signatures').upload(path,file,{upsert:false,contentType:file.type,cacheControl:'3600'});
+   if(up.error) throw up.error;
+   const pub=supabaseClient.storage.from('invigilator-signatures').getPublicUrl(path);
+   return pub.data.publicUrl;
+}
+window.confirmBlueprintDeclare=async function(ids){
+   const names=[1,2,3].map(i=>document.getElementById('tsInv'+i)?.value.trim()||'');
+   const files=[1,2,3].map(i=>document.getElementById('tsSigFile'+i)?.files?.[0]||null);
+   if(!names[0]){alert('Invigilator 1 का नाम जरूरी है।');return}
+   if(!files[0]){alert('Invigilator 1 की signature image Choose & Upload करना जरूरी है।');return}
+   for(let i=1;i<3;i++){
+     if(names[i]&&!files[i]){alert('Invigilator '+(i+1)+' का नाम दिया गया है, इसलिए उसकी signature image भी चुनें।');return}
+     if(!names[i]&&files[i]){alert('Invigilator '+(i+1)+' की signature चुनी गई है, लेकिन नाम नहीं दिया गया।');return}
+   }
+   const remark=document.getElementById('tsDeclareRemark')?.value.trim()||'';
+   const sigs=[];
+   try{
+     for(let i=0;i<3;i++){
+       if(files[i]){
+         const status=document.getElementById('tsSigStatus'+(i+1)); if(status) status.textContent='Uploading...';
+         sigs[i]=await uploadInvigilatorSignature(i+1,files[i]);
+         if(status) status.textContent='Uploaded ✓';
+       }
+     }
+   }catch(e){alert('Invigilator signature upload failed: '+(e.message||e));return}
+   const usedNames=names.filter(Boolean);
+   const usedSigs=sigs.filter(Boolean);
+   const testIds=[];for(const id of ids){const r=await supabaseClient.from('special_test_results').select('test_id').eq('id',id).maybeSingle();if(r.data?.test_id&&!testIds.includes(r.data.test_id))testIds.push(r.data.test_id)}
+   const payload={invigilator_name:JSON.stringify(usedNames),invigilator_signature_url:JSON.stringify(usedSigs),invigilator_signature_name:'Invigilators',result_remarks:remark||null};
+   for(const tid of testIds){
+     const all=await supabaseClient.from('special_test_results').select('id').eq('test_id',tid).in('result_status',['pending']);
+     const targetIds=(all.data||[]).map(x=>x.id);
+     if(targetIds.length){const u=await supabaseClient.from('special_test_results').update(payload).in('id',targetIds);if(u.error){alert('Invigilator information save नहीं हुई: '+u.error.message);return}}
+     const rr=await supabaseClient.rpc('declare_special_test_result',{p_test_id:tid});if(rr.error){alert('Result declaration failed: '+rr.error.message);return}
+   }
+   closeA();toastA('Selected result(s) declared successfully.');await loadResults();await loadDashboard();
+ };
+ window.holdBlueprintResult=async function(id){const remark=prompt('Hold remark / advice लिखें:');if(remark===null)return;const u=await supabaseClient.from('special_test_results').update({is_declared:false,status:'pending',result_status:'pending',result_remarks:'HOLD: '+remark,declared_at:null}).eq('id',id);if(u.error){alert(u.error.message);return}toastA('Result HOLD कर दिया गया।');loadResults();loadDashboard()};
+ window.editBlueprintResult=async function(id){const r=await supabaseClient.from('special_test_results').select('*').eq('id',id).maybeSingle();if(r.error||!r.data){alert(r.error?.message||'Result not found');return}const x=r.data;document.body.insertAdjacentHTML('beforeend',`<div class="ts-modal-overlay" id="tsAdminModal"><div class="ts-admin-modal"><h3>Edit Result</h3><div class="ts-admin-grid"><div><label>Correct</label><input id="erCorrect" type="number" value="${escA(x.correct_answers??0)}"></div><div><label>Incorrect</label><input id="erIncorrect" type="number" value="${escA(x.incorrect_answers??0)}"></div><div><label>Unanswered</label><input id="erUnanswered" type="number" value="${escA(x.unanswered??0)}"></div><div><label>Total Marks</label><input id="erTotal" type="number" step="0.01" value="${escA(x.total_marks??0)}"></div><div><label>Obtained Marks</label><input id="erObtained" type="number" step="0.01" value="${escA(x.obtained_marks??0)}"></div><div><label>Spent Time (seconds)</label><input id="erSpent" type="number" value="${escA(x.spent_time??0)}"></div><div class="full"><label>Remark / Advice</label><textarea id="erRemark" rows="3">${escA(String(x.result_remarks||'').replace(/^HOLD:\s*/i,''))}</textarea></div></div><div class="ts-admin-toolbar"><button class="primary" onclick="saveBlueprintResultEdit('${escA(id)}')">SAVE CHANGES</button><button class="secondary" onclick="closeA()">CANCEL</button></div></div></div>`)};
+ window.saveBlueprintResultEdit=async function(id){const c=+document.getElementById('erCorrect').value||0,i=+document.getElementById('erIncorrect').value||0,u=+document.getElementById('erUnanswered').value||0,t=+document.getElementById('erTotal').value||0,o=+document.getElementById('erObtained').value||0,s=+document.getElementById('erSpent').value||0,p=t>0?Number((o/t*100).toFixed(2)):0,rem=document.getElementById('erRemark').value.trim()||null;const r=await supabaseClient.from('special_test_results').update({correct_answers:c,incorrect_answers:i,unanswered:u,total_marks:t,obtained_marks:o,percentage:p,spent_time:s,result_remarks:rem}).eq('id',id);if(r.error){alert(r.error.message);return}const rr=await supabaseClient.from('special_test_results').select('attempt_id').eq('id',id).maybeSingle();if(rr.data?.attempt_id){await supabaseClient.from('special_test_attempts').update({correct_answers:c,incorrect_answers:i,unanswered:u,total_marks:t,obtained_marks:o,percentage:p,spent_time:s}).eq('id',rr.data.attempt_id)}closeA();toastA('Result updated.');loadResults();loadDashboard()};
+ window.exportBlueprintExcel=async function(){try{await ensureXLSX();const s=await supabaseClient.from('students').select('*').order('created_at',{ascending:false});if(s.error)throw s.error;const r=await supabaseClient.from('special_test_results').select('*').order('created_at',{ascending:false});if(r.error)throw r.error;const ids=[...new Set((r.data||[]).map(x=>x.test_id).filter(Boolean))];let tests=[];if(ids.length){const q=await supabaseClient.from('special_tests').select('*').in('id',ids);tests=q.data||[]}const tm=new Map(tests.map(x=>[String(x.id),x]));const studentsRows=(s.data||[]).map(x=>({Student_ID:x.student_id||'',Name:x.name||x.full_name||'',Mobile:maskMobile(x.mobile||x.mobile_number||x.phone),Board:x.board||'',Class:x.class||'',Stream:x.stream||'',Address:x.address||'',Account_Status:x.account_status|| (x.is_active===false?'blocked':'active'),Registered_At:x.created_at||''}));const resultRows=(r.data||[]).map(x=>{const t=tm.get(String(x.test_id))||{};return {Student_ID:(s.data||[]).find(st=>String(st.id)===String(x.student_id))?.student_id||'',Student_Name:(s.data||[]).find(st=>String(st.id)===String(x.student_id))?.name||'',Mobile:maskMobile((s.data||[]).find(st=>String(st.id)===String(x.student_id))?.mobile),Test_Title:t.title||'',Subject:t.subject||'',Test_Date:t.start_date||'',Correct:x.correct_answers??0,Incorrect:x.incorrect_answers??0,Unanswered:x.unanswered??0,Total_Marks:x.total_marks??0,Obtained_Marks:x.obtained_marks??0,Percentage:x.percentage??0,Rank:x.rank??'',Spent_Time:x.spent_time??0,Result_Status:x.result_status||x.status||'',Declared_At:x.declared_at||'',Remark:x.result_remarks||''}});const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(studentsRows),'Students');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(resultRows),'Results');XLSX.writeFile(wb,'TECH-SUPPORT-STUDENT-RESULT-DATA.xlsx');toastA('Excel download तैयार है।')}catch(e){alert('Excel export failed: '+e.message)}};
+ window.openStudentLoginManager=function(){document.body.insertAdjacentHTML('beforeend',`<div class="ts-modal-overlay" id="tsAdminModal"><div class="ts-admin-modal"><h3>Student Login Management</h3><p class="ts-small">Student ID डालें। Password बदलने के लिए secure admin RPC उपलब्ध होने पर direct change होगा; नहीं होने पर password reset email भेजने का विकल्प दिया जाएगा।</p><div><label>Student ID</label><input id="slmId" placeholder="TS-2026-..."></div><div class="ts-admin-toolbar"><button class="primary" onclick="findStudentLoginBlueprint()">SEARCH STUDENT</button><button class="secondary" onclick="closeA()">CANCEL</button></div><div id="slmOut"></div></div></div>`)};
+ window.findStudentLoginBlueprint=async function(){const id=document.getElementById('slmId').value.trim();if(!id)return;const r=await supabaseClient.from('students').select('*').eq('student_id',id).maybeSingle();const out=document.getElementById('slmOut');if(r.error||!r.data){out.innerHTML='<p>Student नहीं मिला।</p>';return}const s=r.data;const blocked=s.account_status==='blocked'||s.is_active===false;out.innerHTML=`<div class="ts-admin-grid" style="margin-top:15px"><div class="full"><b>${escA(s.name||'')}</b> — ${escA(s.student_id||'')}</div><div><label>New Password</label><input id="slmPass" type="password" minlength="6"></div><div><label>Status</label><div>${blocked?'<span class="ts-status-pill ts-pending">BLOCKED</span>':'<span class="ts-status-pill ts-decl">ACTIVE</span>'}</div></div></div><div class="ts-admin-toolbar"><button class="primary" onclick="changeStudentPasswordBlueprint('${escA(s.student_id)}')">CHANGE PASSWORD</button><button class="secondary" onclick="toggleStudentBlockBlueprint('${escA(s.id)}',${blocked})">${blocked?'UNBLOCK ACCOUNT':'BLOCK ACCOUNT'}</button><button class="secondary" onclick="sendStudentResetBlueprint('${escA(s.mobile||'')}')">SEND RESET</button></div><p id="slmMsg" class="ts-small"></p>`};
+ window.toggleStudentBlockBlueprint=async function(rowId,isBlocked){const next=isBlocked?'active':'blocked';const patch={account_status:next};let r=await supabaseClient.from('students').update(patch).eq('id',rowId);if(r.error&&/account_status|column/i.test(r.error.message||'')){r=await supabaseClient.from('students').update({is_active:isBlocked}).eq('id',rowId)}if(r.error){alert('Account status update failed: '+r.error.message);return}toastA(next==='blocked'?'Student blocked.':'Student unblocked.');await findStudentLoginBlueprint();loadDashboard();loadStudents()};
+ window.changeStudentPasswordBlueprint=async function(studentId){const p=document.getElementById('slmPass').value;if(p.length<6){alert('Password कम से कम 6 characters का होना चाहिए।');return}const r=await supabaseClient.rpc('admin_set_student_password',{p_student_id:studentId,p_new_password:p});if(r.error){document.getElementById('slmMsg').textContent='Direct password change के लिए admin_set_student_password RPC उपलब्ध नहीं है। नीचे SEND RESET का उपयोग करें।';return}toastA('Password changed successfully.');document.getElementById('slmPass').value=''};
+ window.sendStudentResetBlueprint=async function(mobile){if(!mobile){alert('Mobile नहीं मिला।');return}const email=typeof emailForMobile==='function'?emailForMobile(mobile):mobile+'@techsupportsr.in';const r=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});if(r.error)alert(r.error.message);else alert('Password reset link registered email पर भेज दिया गया है।')};
+ window.loadDashboard=async function(){
+   try{
+    const pending=await getPending();const el=document.getElementById('dPending');if(el)el.textContent=pending.length;
+    const status=document.getElementById('systemStatus');if(status)status.innerHTML='<span class="badge green">CONNECTED</span> Supabase database connection is working.';
+    const s=await supabaseClient.from('students').select('*');if(!s.error&&s.data){const rows=s.data;for(const [id,val] of [['dTotalStudents',rows.length],['dClass9',rows.filter(x=>String(x.class||'').toLowerCase()==='9th').length],['dClass10',rows.filter(x=>String(x.class||'').toLowerCase()==='10th').length],['dClass11',rows.filter(x=>String(x.class||'').toLowerCase()==='11th').length],['dClass12',rows.filter(x=>String(x.class||'').toLowerCase()==='12th').length],['dArts',rows.filter(x=>String(x.stream||'').toLowerCase()==='arts').length],['dScience',rows.filter(x=>String(x.stream||'').toLowerCase()==='science').length],['dCommerce',rows.filter(x=>String(x.stream||'').toLowerCase()==='commerce').length],['dActive',rows.filter(x=>x.account_status==='active'||x.is_active===true||(!x.account_status&&x.is_active!==false)).length]]){const e=document.getElementById(id);if(e)e.textContent=val}}
+   }catch(e){console.error(e)}
+ };
+ window.loadResults=async function(){
+   const target=document.getElementById('resultsTable');if(!target)return;target.innerHTML='<div class="empty">Loading results...</div>';
+   const r=await supabaseClient.from('special_test_results').select('*').order('created_at',{ascending:false});if(r.error){target.innerHTML='<div class="empty">'+escA(r.error.message)+'</div>';return}
+   const rows=r.data||[];const pending=rows.filter(x=>String(x.result_status||'pending').toLowerCase()==='pending');
+   target.innerHTML=`<div class="ts-admin-toolbar"><button class="primary" onclick="selectAllBlueprintResults(true)">SELECT ALL PENDING</button><button class="secondary" onclick="selectAllBlueprintResults(false)">CLEAR</button><button class="success" onclick="declareSelectedBlueprintResults()">DECLARE SELECTED</button><button class="secondary" onclick="exportBlueprintExcel()">DOWNLOAD EXCEL</button><button class="secondary" onclick="openStudentLoginManager()">STUDENT LOGIN</button></div><div class="table-wrap"><table><thead><tr><th><input class="ts-check" type="checkbox" onchange="selectAllBlueprintResults(this.checked)"></th><th>Student</th><th>Test</th><th>Marks</th><th>%</th><th>Rank</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows.map(x=>{const dec=String(x.result_status||'pending').toLowerCase()==='declared';const hold=String(x.result_remarks||'').toUpperCase().startsWith('HOLD:');return `<tr><td><input class="ts-check ts-result-check" data-id="${escA(x.id)}" type="checkbox" ${dec?'disabled':''}></td><td>${escA(x.student_id||'—')}</td><td>${escA(x.test_id||'—')}</td><td>${escA(x.obtained_marks??0)} / ${escA(x.total_marks??0)}</td><td>${escA(x.percentage??0)}%</td><td>${escA(x.rank??'—')}</td><td><span class="ts-status-pill ${dec?'ts-decl':'ts-pending'}">${dec?'DECLARED':hold?'HOLD':'PENDING'}</span></td><td><div class="ts-admin-row-actions">${!dec?`<button class="success" onclick="openAdminResultModal(['${escA(x.id)}'])">Declare</button>`:''}<button class="secondary" onclick="editBlueprintResult('${escA(x.id)}')">Edit</button>${!dec?`<button class="secondary" onclick="holdBlueprintResult('${escA(x.id)}')">Hold</button>`:''}</div></td></tr>`}).join('')}</tbody></table></div><div class="ts-small" style="margin-top:10px">Pending Results: <b>${pending.length}</b></div>`;
+ };
+ window.selectAllBlueprintResults=function(v){document.querySelectorAll('.ts-result-check:not(:disabled)').forEach(x=>x.checked=!!v)};
+ window.declareSelectedBlueprintResults=function(){const ids=[...document.querySelectorAll('.ts-result-check:checked')].map(x=>x.dataset.id);if(!ids.length){alert('पहले pending results select करें।');return}openAdminResultModal(ids)};
+ // Add Student Login button to Student Management without replacing the original panel.
+ const studentsSection=document.getElementById('students');if(studentsSection&&!document.getElementById('tsStudentLoginQuick')){const h=studentsSection.querySelector('.section-head');if(h){const b=document.createElement('button');b.id='tsStudentLoginQuick';b.className='primary';b.style.width='auto';b.textContent='STUDENT LOGIN MANAGEMENT';b.onclick=openStudentLoginManager;h.appendChild(b)}}
+})();
+</script>
+
+
+<script>
+(function () {
+  "use strict";
+
+  function closeNearest(el) {
+    let node = el;
+    while (node && node !== document.body) {
+      if (node.matches && node.matches(
+        '.modal, .modal-overlay, .dialog, .popup, .drawer, .offcanvas, [role="dialog"], .form-modal'
+      )) {
+        node.style.display = "none";
+        node.classList.remove("show","active","open","visible");
+        return true;
+      }
+      node = node.parentElement;
+    }
+
+    // Fallback: close the visible overlay/dialog.
+    const candidates = document.querySelectorAll(
+      '.modal, .modal-overlay, .dialog, .popup, .drawer, .offcanvas, [role="dialog"], .form-modal'
+    );
+    for (let i = candidates.length - 1; i >= 0; i--) {
+      const n = candidates[i];
+      if (getComputedStyle(n).display !== "none" &&
+          getComputedStyle(n).visibility !== "hidden") {
+        n.style.display = "none";
+        n.classList.remove("show","active","open","visible");
+        return true;
+      }
+    }
+    return false;
+  }
+
+  window.tsCancel = function (el) {
+    closeNearest(el || document.activeElement);
+    document.dispatchEvent(new CustomEvent("ts:cancel"));
+    return false;
+  };
+
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest &&
+      e.target.closest(
+        'button, a, input[type="button"], input[type="reset"]'
+      );
+    if (!btn) return;
+
+    const label = (
+      btn.getAttribute("aria-label") || btn.textContent || btn.value || ""
+    ).trim().toLowerCase();
+
+    if (/\bcancel\b|रद्द|बंद करें|बन्द करें/.test(label)) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.tsCancel(btn);
+      return false;
+    }
+  }, true);
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      const visible = document.querySelector(
+        '.modal:not([style*="display: none"]), .modal-overlay:not([style*="display: none"]), [role="dialog"]:not([style*="display: none"])'
+      );
+      if (visible) {
+        e.preventDefault();
+        window.tsCancel(visible);
+      }
+    }
+  }, true);
+})();
+</script>
+
+
+<script>
+(function(){
+  "use strict";
+
+  const TS_SUPABASE_URL = "https://dehgjivefnaeeikrnavc.supabase.co";
+  const TS_SUPABASE_KEY = "sb_publishable_HL4IF0LGlV1T3ACQfi6OKA_0J9tU-XY";
+
+  async function tsGetClient(){
+    if(window.db) return window.db;
+    if(window.supabase && window.supabase.createClient){
+      window.db = window.supabase.createClient(TS_SUPABASE_URL, TS_SUPABASE_KEY);
+      return window.db;
+    }
+    throw new Error("Supabase client उपलब्ध नहीं है।");
+  }
+
+  function allowedFile(file){
+    const type = (file.type || "").toLowerCase();
+    const name = (file.name || "").toLowerCase();
+
+    return (
+      type.startsWith("image/") ||
+      type === "application/pdf" ||
+      type === "text/plain" ||
+      /\.(png|jpe?g|webp|gif|svg|pdf|txt)$/i.test(name)
+    );
+  }
+
+  window.tsUploadAdminFile = async function(file, bucket, folder){
+    if(!file) throw new Error("File select करें।");
+
+    if(!allowedFile(file)){
+      throw new Error("केवल Image, PDF या TXT file upload करें।");
+    }
+
+    if(file.size > 25 * 1024 * 1024){
+      throw new Error("File size 25 MB से अधिक नहीं होनी चाहिए।");
+    }
+
+    const db = await tsGetClient();
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+    const path = (folder || "admin") + "/" +
+      Date.now() + "-" +
+      Math.random().toString(36).slice(2,8) + "-" +
+      safeName;
+
+    const {error} = await db.storage
+      .from(bucket)
+      .upload(path, file, {
+        cacheControl:"3600",
+        upsert:false,
+        contentType:file.type || "application/octet-stream"
+      });
+
+    if(error) throw error;
+
+    const {data} = db.storage.from(bucket).getPublicUrl(path);
+
+    if(!data || !data.publicUrl){
+      throw new Error("Uploaded file URL नहीं मिला।");
+    }
+
+    return {
+      path:path,
+      url:data.publicUrl,
+      name:file.name,
+      type:file.type,
+      size:file.size
+    };
+  };
+
+  function createUploader(container, target, bucket, folder){
+    if(!container || container.dataset.tsFileUploaderAdded) return;
+    container.dataset.tsFileUploaderAdded = "1";
+
+    const wrap = document.createElement("div");
+    wrap.className = "ts-admin-file-upload";
+    wrap.style.cssText =
+      "margin:10px 0;padding:13px;border:1px solid #ddd;" +
+      "border-radius:10px;background:#fafafa";
+
+    const label = document.createElement("label");
+    label.textContent = "Upload Image / PDF / TXT";
+    label.style.cssText =
+      "display:block;font-weight:700;margin-bottom:7px";
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept =
+      "image/*,application/pdf,text/plain,.png,.jpg,.jpeg,.webp,.gif,.svg,.pdf,.txt";
+    input.style.cssText =
+      "display:block;width:100%;margin-bottom:8px";
+
+    const status = document.createElement("small");
+    status.textContent =
+      "Image / PDF / TXT • अधिकतम 25 MB";
+    status.style.display = "block";
+
+    const preview = document.createElement("div");
+    preview.style.cssText = "margin-top:8px";
+
+    input.addEventListener("change", async function(){
+      const file = this.files && this.files[0];
+      if(!file) return;
+
+      status.textContent = "Uploading " + file.name + "...";
+      preview.innerHTML = "";
+
+      // Local preview for images.
+      if((file.type || "").startsWith("image/")){
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.style.cssText =
+          "max-width:260px;max-height:180px;border-radius:8px;object-fit:contain";
+        preview.appendChild(img);
+      } else {
+        const info = document.createElement("div");
+        info.textContent = "Selected: " + file.name;
+        info.style.fontWeight = "600";
+        preview.appendChild(info);
+      }
+
+      try{
+        const result = await window.tsUploadAdminFile(
+          file,
+          bucket,
+          folder
+        );
+
+        if(target){
+          target.value = result.url;
+          target.dispatchEvent(new Event("input",{bubbles:true}));
+          target.dispatchEvent(new Event("change",{bubbles:true}));
+        }
+
+        status.textContent =
+          "Upload successful: " + result.name;
+      }catch(err){
+        status.textContent =
+          "Upload failed: " + (err.message || err);
+        input.value = "";
+        preview.innerHTML = "";
+      }
+    });
+
+    wrap.append(label,input,status,preview);
+    container.appendChild(wrap);
+  }
+
+  function scan(){
+    document.querySelectorAll("input,textarea").forEach(function(field){
+      const name = (
+        (field.name||"") + " " +
+        (field.id||"") + " " +
+        (field.placeholder||"")
+      ).toLowerCase();
+
+      const isNotice =
+        /notice/.test(name);
+
+      const isMaterial =
+        /material|study/.test(name);
+
+      const isFileTarget =
+        /image|image_url|imageurl|file|file_url|fileurl|photo|thumbnail|url/.test(name);
+
+      if(!isFileTarget || (!isNotice && !isMaterial)) return;
+
+      const parent =
+        field.closest(".form-group,.field,.input-group,.form-field,.form-row") ||
+        field.parentElement;
+
+      if(!parent) return;
+
+      createUploader(
+        parent,
+        field,
+        isNotice ? "notices" : "study-materials",
+        isNotice ? "notice-files" : "material-files"
+      );
+    });
+  }
+
+  window.tsSetupNoticeFileUpload = function(input,targetId){
+    const target =
+      targetId ? document.getElementById(targetId) : input;
+    const holder =
+      input && input.parentElement ? input.parentElement : null;
+
+    createUploader(
+      holder,
+      target,
+      "notices",
+      "notice-files"
+    );
+  };
+
+  window.tsSetupStudyMaterialFileUpload = function(input,targetId){
+    const target =
+      targetId ? document.getElementById(targetId) : input;
+    const holder =
+      input && input.parentElement ? input.parentElement : null;
+
+    createUploader(
+      holder,
+      target,
+      "study-materials",
+      "material-files"
+    );
+  };
+
+  const observer =
+    new MutationObserver(scan);
+
+  observer.observe(
+    document.documentElement,
+    {childList:true,subtree:true}
+  );
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    scan
+  );
+
+  setTimeout(scan,1000);
+  setTimeout(scan,2500);
+  setTimeout(scan,5000);
+
+})();
+</script>
+
+<style>
+/* =========================================================
+   CHAT WITH STUDENTS — ADMIN PANEL THEME
+   Matches the existing dark/red TECH SUPPORT Admin UI.
+========================================================= */
+.ts-admin-chat-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;margin-left:7px;border-radius:20px;background:var(--red);color:#fff;font-size:10px;font-weight:900}.ts-admin-chat-badge.hidden{display:none}
+.ts-admin-chat-shell{display:grid;grid-template-columns:290px 1fr;min-height:650px;background:#0d0d0d;border:1px solid #292929;border-radius:13px;overflow:hidden}
+.ts-admin-chat-list{border-right:1px solid #292929;background:#101010;overflow:auto}.ts-admin-chat-list-head{padding:15px;border-bottom:1px solid #292929;font-weight:800;color:#fff}.ts-admin-chat-contact{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border:0;border-bottom:1px solid #222;background:transparent;color:#ddd;text-align:left;cursor:pointer}.ts-admin-chat-contact:hover,.ts-admin-chat-contact.active{background:#22090b}.ts-admin-chat-contact.active{border-left:3px solid var(--red)}
+.ts-admin-avatar{width:42px;height:42px;border-radius:50%;background:#252525;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;flex:0 0 42px;overflow:hidden}.ts-admin-avatar img{width:100%;height:100%;object-fit:cover}.ts-admin-contact-info{min-width:0;flex:1}.ts-admin-contact-info strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ts-admin-contact-info small{display:block;color:#777;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ts-admin-unread{float:right;background:var(--red);color:#fff;border-radius:20px;padding:3px 6px;font-size:9px;font-weight:900}
+.ts-admin-chat-main{display:flex;flex-direction:column;min-width:0}.ts-admin-chat-head{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid #292929;background:#111}.ts-admin-chat-head strong{display:block;color:#fff}.ts-admin-chat-head small{color:#777}.ts-admin-chat-status{margin-left:auto;color:#51e6a4;font-size:10px}.ts-admin-chat-body{flex:1;min-height:450px;max-height:540px;overflow:auto;padding:18px;background:radial-gradient(circle at top,#181818,#0d0d0d)}
+.ts-admin-row{display:flex;margin:7px 0}.ts-admin-row.admin{justify-content:flex-end}.ts-admin-row.student{justify-content:flex-start}.ts-admin-bubble{max-width:min(78%,620px);padding:9px 11px;border-radius:11px;background:#181818;border:1px solid #292929;color:#ddd;line-height:1.45;font-size:13px;word-break:break-word}.ts-admin-row.admin .ts-admin-bubble{background:#35080b;border-color:#791017;color:#fff;border-bottom-right-radius:3px}.ts-admin-row.student .ts-admin-bubble{border-bottom-left-radius:3px}.ts-admin-time{display:block;text-align:right;margin-top:4px;color:#777;font-size:9px}.ts-admin-attachment{display:block;margin-top:6px;padding:8px;border:1px solid #333;border-radius:8px;background:#0d0d0d;color:#fff;text-decoration:none;font-weight:700}.ts-admin-attachment img{display:block;max-width:260px;max-height:180px;border-radius:7px;margin-bottom:5px}.ts-admin-compose{border-top:1px solid #292929;background:#111;padding:10px;display:flex;gap:7px;align-items:flex-end}.ts-admin-compose textarea{flex:1;min-height:44px;max-height:120px;resize:none;background:#0b0b0b;color:#fff;border:1px solid #303030;border-radius:9px;padding:10px}.ts-admin-icon-btn{width:43px;height:43px;border:1px solid #3a3a3a;background:#181818;color:#fff;border-radius:8px;cursor:pointer}.ts-admin-send{height:43px;border:0;background:var(--red);color:#fff;border-radius:8px;padding:0 17px;font-weight:800;cursor:pointer}.ts-admin-send:hover{background:var(--red2)}.ts-admin-file-name{font-size:10px;color:#777;padding:0 12px 7px}.ts-admin-empty{height:100%;min-height:400px;display:flex;align-items:center;justify-content:center;text-align:center;color:#666;padding:30px}.ts-admin-chat-note{padding:8px 12px;border-bottom:1px solid #222;color:#666;font-size:10px;background:#0d0d0d}
+@media(max-width:850px){.ts-admin-chat-shell{grid-template-columns:1fr}.ts-admin-chat-list{max-height:240px;border-right:0;border-bottom:1px solid #292929}.ts-admin-chat-body{min-height:380px}.ts-admin-chat-contact{display:inline-flex;width:48%;vertical-align:top}.ts-admin-bubble{max-width:88%}}
+
+/* =========================================================
+   TECH SUPPORT — SPECIFIC NOTICE ADMIN
+   ========================================================= */
+.ts-specific-form-note{font-size:12px;color:#888;line-height:1.5}
+.ts-specific-file{font-size:12px;color:#aaa;margin-top:6px}
+.ts-specific-status{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:900;text-transform:uppercase}
+.ts-specific-status.pending{background:#332b12;color:#f1cf6b}
+.ts-specific-status.viewed{background:#10324a;color:#7fc9ff}
+.ts-specific-status.acknowledged{background:#103c2a;color:#65e6a6}
+.ts-specific-attach{color:#7fc9ff;text-decoration:none;font-weight:800}
+</style>
+<script>
+(function(){
+  'use strict';
+  const AUTH_IDS=['TS-2026-131201','TS-2026-4D061B'];
+  let contacts=[],selectedId=null,adminChatChannel=null,adminFile=null;
+  const root=()=>document.getElementById('tsAdminChatRoot');
+  const escA=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const fmt=d=>{try{return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}catch{return ''}};
+  const safeName=n=>String(n||'file').replace(/[^a-zA-Z0-9._-]/g,'_');
+  async function signedUrl(m){
+    const p=m.attachment_path||''; if(!p)return m.attachment_url||'';
+    try{const r=await supabaseClient.storage.from('student-chat-files').createSignedUrl(p,3600);return r.data?.signedUrl||m.attachment_url||''}catch{return m.attachment_url||''}
+  }
+  function attachmentHtml(m,url){
+    if(!url)return '';const type=String(m.attachment_type||m.mime_type||'').toLowerCase(),name=escA(m.attachment_name||'Attachment');
+    if(type.startsWith('image/'))return `<a class="ts-admin-attachment" href="${escA(url)}" target="_blank" rel="noopener"><img src="${escA(url)}" alt="${name}"><span>📎 ${name}</span></a>`;
+    return `<a class="ts-admin-attachment" href="${escA(url)}" target="_blank" rel="noopener">📎 ${name}</a>`;
+  }
+  async function loadContacts(){
+    const r=await supabaseClient.from('students').select('id,student_id,name,profile_photo_url,is_active,account_status').in('student_id',AUTH_IDS).order('name');
+    if(r.error)throw r.error;
+    contacts=(r.data||[]).filter(x=>x.is_active&&x.account_status==='active'&&AUTH_IDS.includes(String(x.student_id)));
+  }
+  function contactUnread(studentId){return Number(window.tsAdminUnreadMap?.[studentId]||0)}
+  async function loadUnreadMap(){
+    window.tsAdminUnreadMap={};
+    for(const c of contacts){try{const r=await supabaseClient.rpc('get_sonpal_admin_messages',{p_student_id:c.student_id,p_limit:100,p_before:null});window.tsAdminUnreadMap[c.student_id]=(r.data||[]).filter(m=>m.sender_role==='student'&&!m.read_at).length}catch(e){}}
+    const total=Object.values(window.tsAdminUnreadMap).reduce((a,b)=>a+b,0),badge=document.getElementById('tsAdminChatBadge');if(badge){badge.textContent=total;badge.classList.toggle('hidden',total<1)}
+  }
+  function renderLayout(){
+    root().innerHTML=`<div class="ts-admin-chat-shell"><aside class="ts-admin-chat-list"><div class="ts-admin-chat-list-head">Chats</div><div id="tsAdminContacts"></div></aside><div class="ts-admin-chat-main"><div id="tsAdminChatHead" class="ts-admin-chat-head"><div class="ts-admin-empty">Student select करें</div></div><div class="ts-admin-chat-note">केवल authorized Sonpal chat users दिखाई दे रहे हैं।</div><div id="tsAdminChatMessages" class="ts-admin-chat-body"><div class="ts-admin-empty">बातचीत शुरू करने के लिए ऊपर से student चुनें।</div></div><div id="tsAdminChatFileName" class="ts-admin-file-name"></div><div class="ts-admin-compose"><input id="tsAdminChatFile" type="file" accept="image/*,application/pdf,.pdf" hidden><button id="tsAdminAttach" class="ts-admin-icon-btn" type="button" title="Attach PDF / Image">📎</button><textarea id="tsAdminChatInput" placeholder="Message लिखें..."></textarea><button id="tsAdminSend" class="ts-admin-send" type="button">Send</button></div></div></div>`;
+    renderContacts();
+    document.getElementById('tsAdminAttach').onclick=()=>document.getElementById('tsAdminChatFile').click();
+    document.getElementById('tsAdminChatFile').onchange=e=>{adminFile=e.target.files?.[0]||null;document.getElementById('tsAdminChatFileName').textContent=adminFile?`📎 ${adminFile.name}`:''};
+    document.getElementById('tsAdminSend').onclick=sendAdminMessage;
+    document.getElementById('tsAdminChatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAdminMessage()}});
+  }
+  function renderContacts(){
+    const box=document.getElementById('tsAdminContacts');if(!box)return;
+    box.innerHTML=contacts.map(c=>`<button class="ts-admin-chat-contact ${selectedId===c.student_id?'active':''}" onclick="window.tsSelectAdminSonpalChat('${escA(c.student_id)}')"><div class="ts-admin-avatar">${c.profile_photo_url?`<img src="${escA(c.profile_photo_url)}">`:'S'}</div><div class="ts-admin-contact-info"><strong>${escA(c.name)}</strong><small>${escA(c.student_id)}</small></div>${contactUnread(c.student_id)?`<span class="ts-admin-unread">${contactUnread(c.student_id)}</span>`:''}</button>`).join('');
+  }
+  async function selectContact(id){
+    if(!AUTH_IDS.includes(String(id)))return;selectedId=id;renderContacts();const c=contacts.find(x=>x.student_id===id);const head=document.getElementById('tsAdminChatHead');head.innerHTML=`<div class="ts-admin-avatar">${c?.profile_photo_url?`<img src="${escA(c.profile_photo_url)}">`:'S'}</div><div><strong>${escA(c?.name||id)}</strong><small>${escA(id)}</small></div><div class="ts-admin-chat-status">● Active</div>`;await refreshMessages();await supabaseClient.rpc('mark_sonpal_admin_messages_read',{p_student_id:id});await loadUnreadMap();renderContacts()}
+  async function refreshMessages(){
+    const box=document.getElementById('tsAdminChatMessages');if(!box||!selectedId)return;box.innerHTML='<div class="ts-admin-empty">Messages load हो रहे हैं...</div>';
+    const r=await supabaseClient.rpc('get_sonpal_admin_messages',{p_student_id:selectedId,p_limit:100,p_before:null});
+    if(r.error){box.innerHTML=`<div class="ts-admin-empty">Chat load नहीं हो सकी।<br>${escA(r.error.message)}</div>`;return}
+    const data=(r.data||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    if(!data.length){box.innerHTML='<div class="ts-admin-empty">अभी कोई संदेश नहीं है।<br>यहाँ से बातचीत शुरू करें।</div>';return}
+    const rows=await Promise.all(data.map(async m=>({m,url:await signedUrl(m)})));
+    box.innerHTML=rows.map(({m,url})=>`<div class="ts-admin-row ${m.sender_role==='admin'?'admin':'student'}"><div class="ts-admin-bubble">${m.body?escA(m.body).replace(/\n/g,'<br>'):''}${attachmentHtml(m,url)}<span class="ts-admin-time">${fmt(m.created_at)}</span></div></div>`).join('');box.scrollTop=box.scrollHeight;
+  }
+  async function sendAdminMessage(){
+    if(!selectedId)return alert('पहले student select करें।');const input=document.getElementById('tsAdminChatInput'),body=input.value.trim();if(!body&&!adminFile)return;
+    const btn=document.getElementById('tsAdminSend');btn.disabled=true;btn.textContent='Sending...';
+    try{let path=null,url=null,name=null,type=null;if(adminFile){if(adminFile.size>25*1024*1024)throw new Error('File 25 MB से अधिक नहीं हो सकती।');if(!(adminFile.type.startsWith('image/')||adminFile.type==='application/pdf'))throw new Error('केवल Image या PDF attach कर सकते हैं।');name=adminFile.name;type=adminFile.type;path=`admin/${selectedId}/${Date.now()}-${safeName(name)}`;const up=await supabaseClient.storage.from('student-chat-files').upload(path,adminFile,{upsert:false,contentType:type});if(up.error)throw up.error}
+      const r=await supabaseClient.rpc('send_sonpal_admin_message',{p_student_id:selectedId,p_body:body||null,p_attachment_path:path,p_attachment_url:url,p_attachment_name:name,p_attachment_type:type});if(r.error)throw r.error;input.value='';adminFile=null;document.getElementById('tsAdminChatFileName').textContent='';document.getElementById('tsAdminChatFile').value='';await refreshMessages();await loadUnreadMap();renderContacts();
+    }catch(e){alert(e.message||'Message send नहीं हुआ।')}finally{btn.disabled=false;btn.textContent='Send'}
+  }
+  function setupRealtime(){if(adminChatChannel)try{supabaseClient.removeChannel(adminChatChannel)}catch(e){}adminChatChannel=supabaseClient.channel('admin-sonpal-chat').on('postgres_changes',{event:'*',schema:'public',table:'student_sonpal_messages'},async payload=>{if(selectedId&&(payload.new?.student_id===selectedId||payload.old?.student_id===selectedId))await refreshMessages();await loadUnreadMap();renderContacts()}).subscribe()}
+  async function load(){try{await loadContacts();await loadUnreadMap();renderLayout();setupRealtime();if(!selectedId&&contacts.length)await selectContact(contacts[0].student_id);else if(selectedId)await selectContact(selectedId)}catch(e){root().innerHTML=`<div class="panel"><div class="msg error" style="display:block">Chat load नहीं हो सकी: ${escA(e.message)}</div></div>`}}
+  window.tsLoadAdminSonpalChat=load;window.tsSelectAdminSonpalChat=selectContact;
+  document.addEventListener('DOMContentLoaded',()=>{setTimeout(loadUnreadMap,1200)});
+})();
+</script>
+<script id="ts-video-admin-js">
+(function(){
+  const dbA = supabaseClient;
+  const escV = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+
+  async function uploadVideoFile(file, folder){
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const path = folder + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+    const r = await dbA.storage.from('videos').upload(path, file, {
+      upsert:false, contentType:file.type || undefined
+    });
+    if(r.error) throw r.error;
+    return path;
+  }
+
+  async function getVideos(){
+    const r = await dbA.rpc('admin_get_videos');
+    if(r.error) throw r.error;
+    return r.data || [];
+  }
+
+  window.loadAdminVideos = async function(){
+    const box = document.getElementById('tsAdminVideosTable');
+    const engagement = document.getElementById('tsVideoEngagement');
+    if(!box) return;
+    box.innerHTML = '<div class="empty">Loading videos...</div>';
+    try{
+      const videos = await getVideos();
+      if(!videos.length){
+        box.innerHTML = '<div class="empty">No videos uploaded yet.</div>';
+        if(engagement) engagement.innerHTML = '';
+        return;
+      }
+      const rows = await Promise.all(videos.map(async (v)=>{
+        const likes = await dbA.from('video_likes').select('*',{count:'exact',head:true}).eq('video_id',v.id);
+        const comments = await dbA.from('video_comments').select('*',{count:'exact',head:true}).eq('video_id',v.id);
+        return {v, likes:likes.count || 0, comments:comments.count || 0};
+      }));
+      let html = '<div style="overflow:auto"><table class="ts-video-admin-table"><thead><tr><th>Video</th><th>Status</th><th>Engagement</th><th>Actions</th></tr></thead><tbody>';
+      rows.forEach(({v,likes,comments})=>{
+        html += '<tr>';
+        html += '<td><strong>'+escV(v.title)+'</strong><div style="color:#777;font-size:11px;margin-top:4px">'+escV(v.description || '')+'</div></td>';
+        html += '<td><span class="ts-video-status '+escV(v.status)+'">'+escV(v.status)+'</span></td>';
+        html += '<td>❤️ '+likes+' &nbsp; 💬 '+comments+'</td><td><div class="ts-admin-video-actions">';
+        html += '<button class="secondary" onclick="window.tsPreviewAdminVideo(\''+escV(v.id)+'\')">Preview</button>';
+        if(v.status === 'published') html += '<button class="secondary" onclick="window.tsSetVideoStatus(\''+escV(v.id)+'\',\'archived\')">Archive</button>';
+        else html += '<button class="primary" onclick="window.tsSetVideoStatus(\''+escV(v.id)+'\',\'published\')">Publish</button>';
+        html += '<button class="danger" onclick="window.tsDeleteAdminVideo(\''+escV(v.id)+'\')">Delete</button>';
+        html += '<button class="secondary" onclick="window.tsShowVideoEngagement(\''+escV(v.id)+'\')">Engagement</button>';
+        html += '</div></td></tr>';
+      });
+      html += '</tbody></table></div>';
+      box.innerHTML = html;
+      if(engagement) engagement.innerHTML = '<div class="empty">Select <b>Engagement</b> on a video to see Admin-only details.</div>';
+    }catch(e){
+      box.innerHTML = '<div class="empty">'+escV(e.message || e)+'</div>';
+    }
+  };
+
+  window.tsSetVideoStatus = async function(id,status){
+    try{
+      const videos = await getVideos();
+      const v = videos.find(x => x.id === id);
+      if(!v) return;
+      const r = await dbA.rpc('admin_update_video', {
+        p_video_id:id, p_title:v.title, p_description:v.description,
+        p_video_path:v.video_path, p_thumbnail_path:v.thumbnail_path,
+        p_status:status
+      });
+      if(r.error) throw r.error;
+      await window.loadAdminVideos();
+    }catch(e){ alert(e.message || e); }
+  };
+
+  window.tsDeleteAdminVideo = async function(id){
+    if(!confirm('Delete this video and its engagement records?')) return;
+    try{
+      const videos = await getVideos();
+      const v = videos.find(x => x.id === id);
+      const r = await dbA.rpc('admin_delete_video',{p_video_id:id});
+      if(r.error) throw r.error;
+      if(v && v.video_path) await dbA.storage.from('videos').remove([v.video_path]);
+      if(v && v.thumbnail_path) await dbA.storage.from('videos').remove([v.thumbnail_path]);
+      await window.loadAdminVideos();
+    }catch(e){ alert(e.message || e); }
+  };
+
+  window.tsPreviewAdminVideo = async function(id){
+    try{
+      const v = (await getVideos()).find(x => x.id === id);
+      if(!v) return;
+      const r = await dbA.storage.from('videos').createSignedUrl(v.video_path,3600);
+      if(r.error) throw r.error;
+      window.open(r.data.signedUrl,'_blank','noopener');
+    }catch(e){ alert(e.message || e); }
+  };
+
+  window.tsShowVideoEngagement = async function(id){
+    const box = document.getElementById('tsVideoEngagement');
+    if(!box) return;
+    box.innerHTML = '<div class="empty">Loading engagement...</div>';
+    try{
+      const likeResult = await dbA.from('video_likes').select('id,student_id,created_at').eq('video_id',id).order('created_at',{ascending:false});
+      const commentResult = await dbA.from('video_comments').select('id,student_id,comment_text,created_at,updated_at').eq('video_id',id).order('created_at',{ascending:false});
+      if(likeResult.error) throw likeResult.error;
+      if(commentResult.error) throw commentResult.error;
+      const likes = likeResult.data || [], comments = commentResult.data || [];
+      const ids = [...new Set(likes.map(x=>x.student_id).concat(comments.map(x=>x.student_id)))];
+      const studentsById = {};
+      if(ids.length){
+        const sr = await dbA.from('students').select('id,student_id,name,mobile').in('id',ids);
+        if(sr.error) throw sr.error;
+        (sr.data || []).forEach(x=>studentsById[x.id]=x);
+      }
+      let html = '<div class="ts-engage-card"><div class="ts-engage-head"><strong>❤️ Total Likes: '+likes.length+'</strong><strong>💬 Total Comments: '+comments.length+'</strong></div></div>';
+      html += '<div class="ts-engage-card"><strong>❤️ Students who liked</strong>';
+      if(likes.length){ likes.forEach(x=>{const st=studentsById[x.student_id]||{};html+='<div class="ts-admin-comment">'+escV(st.name||st.student_id||x.student_id)+'<small>'+escV(st.student_id||'')+' • '+new Date(x.created_at).toLocaleString('en-IN')+'</small></div>';}); }
+      else html += '<div class="ts-admin-comment">No likes yet.</div>';
+      html += '</div><div class="ts-engage-card"><strong>💬 All comments</strong>';
+      if(comments.length){ comments.forEach(x=>{const st=studentsById[x.student_id]||{};html+='<div class="ts-admin-comment"><b>'+escV(st.name||st.student_id||x.student_id)+'</b>: '+escV(x.comment_text)+'<small>'+escV(st.student_id||'')+' • '+new Date(x.created_at).toLocaleString('en-IN')+' <button class="danger" style="width:auto!important;padding:4px 8px;margin-left:8px" onclick="window.tsDeleteAdminComment(\''+escV(x.id)+'\',\''+escV(id)+'\')">Delete</button></small></div>';}); }
+      else html += '<div class="ts-admin-comment">No comments yet.</div>';
+      html += '</div>';
+      box.innerHTML = html;
+    }catch(e){ box.innerHTML = '<div class="empty">'+escV(e.message || e)+'</div>'; }
+  };
+
+  window.tsDeleteAdminComment = async function(commentId,videoId){
+    if(!confirm('Delete this comment?')) return;
+    const r = await dbA.from('video_comments').delete().eq('id',commentId);
+    if(r.error) alert(r.error.message); else window.tsShowVideoEngagement(videoId);
+  };
+
+  document.addEventListener('DOMContentLoaded',function(){
+    const form = document.getElementById('tsAdminVideoForm');
+    if(!form) return;
+    form.addEventListener('submit',async function(e){
+      e.preventDefault();
+      const msg = document.getElementById('tsVideoUploadMsg');
+      const file = document.getElementById('tsVideoFile').files[0];
+      const thumb = document.getElementById('tsVideoThumb').files[0];
+      msg.className = 'msg'; msg.textContent = 'Uploading...';
+      try{
+        if(!file || !file.type.startsWith('video/')) throw new Error('Valid video file चुनें।');
+        if(file.size > 1024*1024*1024) throw new Error('Video 1 GB से बड़ी नहीं होनी चाहिए।');
+        const videoPath = await uploadVideoFile(file,'videos');
+        let thumbPath = null;
+        if(thumb){
+          if(!thumb.type.startsWith('image/')) throw new Error('Thumbnail image होना चाहिए।');
+          thumbPath = await uploadVideoFile(thumb,'thumbnails');
+        }
+        const r = await dbA.rpc('admin_create_video',{
+          p_title:document.getElementById('tsVideoTitle').value.trim(),
+          p_description:document.getElementById('tsVideoDescription').value.trim() || null,
+          p_video_path:videoPath, p_thumbnail_path:thumbPath,
+          p_status:document.getElementById('tsVideoStatus').value
+        });
+        if(r.error) throw r.error;
+        msg.className='msg ok'; msg.textContent='Video uploaded successfully.';
+        form.reset(); await window.loadAdminVideos();
+      }catch(err){ msg.className='msg error'; msg.textContent='Upload failed: '+(err.message || err); }
+    });
+  });
+})();
+</script>
+
+
+<script id="ts-specific-notice-admin-js">
+(function(){
+  "use strict";
+
+  const db = supabaseClient;
+
+  function tsSNDate(v){
+    if(!v)return "—";
+    try{return new Date(v).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});}
+    catch(e){return String(v);}
+  }
+
+  function tsSNStatus(status){
+    const s=String(status||"pending").toLowerCase();
+    const label=s==="acknowledged"?"CLOSED":s.toUpperCase();
+    return '<span class="ts-specific-status '+esc(s)+'">'+label+'</span>';
+  }
+
+  async function uploadSpecificNoticeFile(studentId,file){
+    if(!file)return {type:null,path:null};
+
+    const allowed =
+      file.type.startsWith("image/") ||
+      file.type==="application/pdf" ||
+      file.type==="text/plain" ||
+      /\.(txt)$/i.test(file.name);
+
+    if(!allowed) throw new Error("केवल Image, PDF या TXT file भेज सकते हैं।");
+    if(file.size > 15*1024*1024)
+      throw new Error("Attachment 15 MB से अधिक नहीं हो सकती।");
+
+    const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+    const path=String(studentId).trim()+"/"+Date.now()+"-"+safeName;
+
+    const up=await db.storage.from("specific-notices").upload(path,file,{
+      upsert:false,
+      contentType:file.type||"application/octet-stream"
+    });
+    if(up.error)throw up.error;
+
+    let type="txt";
+    if(file.type.startsWith("image/"))type="image";
+    else if(file.type==="application/pdf")type="pdf";
+
+    return {type,path};
+  }
+
+  window.formatSpecificNotice=function(command){
+    const editor=document.getElementById("specificNoticeMessage");
+    if(!editor)return;
+    editor.focus();
+    document.execCommand(command,false,null);
+  };
+
+  document.addEventListener("DOMContentLoaded",function(){
+    const form=document.getElementById("specificNoticeForm");
+    if(!form)return;
+
+    form.addEventListener("submit",async function(e){
+      e.preventDefault();
+      clearMsg("specificNoticeMsg");
+
+      const btn=form.querySelector('button[type="submit"]');
+      const studentId=document.getElementById("specificStudentId").value.trim();
+      const title=document.getElementById("specificNoticeTitle").value.trim();
+      const message=document.getElementById("specificNoticeMessage").innerHTML.trim();
+      const file=document.getElementById("specificNoticeFile").files?.[0]||null;
+
+      if(!studentId)return setMsg("specificNoticeMsg","Student ID आवश्यक है।");
+      if(!title)return setMsg("specificNoticeMsg","Notice Heading आवश्यक है।");
+
+      btn.disabled=true;
+      btn.textContent="SENDING...";
+
+      try{
+        const uploaded=await uploadSpecificNoticeFile(studentId,file);
+
+        const r=await db.rpc("admin_send_specific_notice",{
+          p_student_id:studentId,
+          p_title:title,
+          p_message:message||null,
+          p_attachment_type:uploaded.type,
+          p_attachment_url:uploaded.path
+        });
+
+        if(r.error)throw r.error;
+
+        setMsg(
+          "specificNoticeMsg",
+          "Specific Notice सफलतापूर्वक भेज दिया गया। Target User online होने पर तुरंत Popup दिखाई देगा।",
+          "ok"
+        );
+
+        form.reset();
+        await loadSpecificNotices();
+      }catch(err){
+        console.error("SPECIFIC NOTICE SEND ERROR",err);
+        setMsg("specificNoticeMsg","Notice send नहीं हुआ: "+(err.message||err));
+      }finally{
+        btn.disabled=false;
+        btn.textContent="SEND SPECIFIC NOTICE";
+      }
+    });
+  });
+
+  window.loadSpecificNotices=async function(){
+    const box=document.getElementById("specificNoticesTable");
+    if(!box)return;
+
+    box.innerHTML='<div class="empty">Loading Specific Notices...</div>';
+
+    try{
+      const r=await db.rpc("admin_get_specific_notices");
+      if(r.error)throw r.error;
+
+      window.tsSpecificNotices=Array.isArray(r.data)?r.data:[];
+
+      renderSpecificNotices();
+    }catch(err){
+      console.error(err);
+      box.innerHTML='<div class="empty">'+esc(err.message||String(err))+'</div>';
+    }
+  };
+
+  window.renderSpecificNotices=function(){
+    const box=document.getElementById("specificNoticesTable");
+    if(!box)return;
+
+    const q=(document.getElementById("specificNoticeSearch")?.value||"")
+      .trim().toLowerCase();
+
+    const rows=(window.tsSpecificNotices||[]).filter(n=>{
+      if(!q)return true;
+      return String(n.student_id||"").toLowerCase().includes(q) ||
+             String(n.id||"").toLowerCase().includes(q) ||
+             String(n.title||"").toLowerCase().includes(q);
+    });
+
+    if(!rows.length){
+      box.innerHTML='<div class="empty">No Specific Notices found.</div>';
+      return;
+    }
+
+    let html='<div class="table-wrap"><table><thead><tr>'+
+      '<th>Student ID</th>'+
+      '<th>Notice</th>'+
+      '<th>Attachment</th>'+
+      '<th>Issued</th>'+
+      '<th>Viewed</th>'+
+      '<th>Closed</th>'+
+      '<th>Status</th>'+
+      '</tr></thead><tbody>';
+
+    rows.forEach(n=>{
+      html+='<tr>'+
+        '<td>'+esc(n.student_id||"—")+'</td>'+
+        '<td><b>'+esc(n.title||"Specific Notice")+'</b>'+
+          (n.message?'<div style="color:#888;margin-top:4px;max-width:300px;white-space:normal">'+esc(String(n.message).slice(0,180))+'</div>':'')+
+        '</td>'+
+        '<td>'+(
+          n.attachment_url
+          ? '<span class="ts-specific-file">'+esc(n.attachment_type||"file")+'</span>'
+          : '—'
+        )+'</td>'+
+        '<td>'+esc(tsSNDate(n.issued_at))+'</td>'+
+        '<td>'+esc(tsSNDate(n.viewed_at))+'</td>'+
+        '<td>'+esc(tsSNDate(n.acknowledged_at))+'</td>'+
+        '<td>'+tsSNStatus(n.status)+'</td>'+
+      '</tr>';
+    });
+
+    html+='</tbody></table></div>';
+    box.innerHTML=html;
+  };
+
+  // Refresh tracking whenever the Specific Notice section is opened.
+  const oldNavHandler=window.__tsSpecificNoticeNavPatched;
+  if(!oldNavHandler){
+    window.__tsSpecificNoticeNavPatched=true;
+    document.addEventListener("click",function(e){
+      const btn=e.target.closest('.nav button[data-section="notices"]');
+      if(btn)setTimeout(window.loadSpecificNotices,150);
+    });
+  }
+})();
+</script>
+
+
+<script id="ts-course-administration">
+(function(){
+  "use strict";
+  const BUCKET = "course-advertisements";
+  let ads = [];
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const showFormMsg = (message, ok=false) => {
+    const el=$("tsAdFormMsg"); if(!el)return;
+    el.className="msg "+(ok?"ok":"error"); el.textContent=message;
+  };
+  const storageUrl = path => {
+    if(!path)return "";
+    if(/^https?:\/\//i.test(path))return path;
+    return supabaseClient.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+  };
+  const storagePathFromUrl = url => {
+    try{
+      const marker="/storage/v1/object/public/"+BUCKET+"/";
+      const idx=String(url||"").indexOf(marker);
+      return idx<0 ? null : decodeURIComponent(String(url).slice(idx+marker.length));
+    }catch(_){return null}
+  };
+  const safeDestination = value => {
+    const v=String(value||"").trim();
+    if(!v)return null;
+    if(/^https:\/\//i.test(v)||/^techsupport:\/\//i.test(v))return v;
+    throw new Error("Button Link में केवल https:// या techsupport:// link दें।");
+  };
+  async function uploadFile(file, kind){
+    if(!file)return null;
+    const allowed = kind==="poster"
+      ? ["image/jpeg","image/png","image/webp","image/gif"]
+      : ["image/jpeg","image/png","image/webp","image/gif","video/mp4","video/webm","video/quicktime"];
+    if(!allowed.includes((file.type||"").toLowerCase()))throw new Error("यह file type supported नहीं है।");
+    if(file.size>100*1024*1024)throw new Error("File 100 MB से बड़ी है।");
+    const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"");
+    const path=`${new Date().getFullYear()}/${crypto.randomUUID()}-${kind}.${ext||"bin"}`;
+    const {error}=await supabaseClient.storage.from(BUCKET).upload(path,file,{upsert:false,contentType:file.type||undefined,cacheControl:"3600"});
+    if(error)throw error;
+    return path;
+  }
+  async function removeStoragePath(path){
+    if(!path)return;
+    const {error}=await supabaseClient.storage.from(BUCKET).remove([path]);
+    if(error)console.warn("Advertisement media cleanup warning:",error.message);
+  }
+  window.tsLoadCourseAds=async function(){
+    const list=$("tsCourseAdsList"); if(!list)return;
+    list.innerHTML='<div class="empty">Advertisements load हो रहे हैं...</div>';
+    const {data,error}=await supabaseClient.from("course_advertisements")
+      .select("*").order("display_order",{ascending:true}).order("created_at",{ascending:false});
+    if(error){
+      list.innerHTML=`<div class="empty">Load नहीं हो पाया: ${esc(error.message)}<br>Admin account की अनुमति और course_advertisements table जाँचें।</div>`;
+      return;
+    }
+    ads=data||[];
+    window.tsRenderCourseAds();
+  };
+  window.tsRenderCourseAds=function(){
+    const list=$("tsCourseAdsList"); if(!list)return;
+    const filter=$("tsAdFilter")?.value||"all";
+    const rows=ads.filter(a=>filter==="all"||(filter==="active"?a.is_active:!a.is_active));
+    if(!rows.length){list.innerHTML='<div class="empty">इस filter में कोई advertisement नहीं है।</div>';return}
+    list.innerHTML=rows.map((a,index)=>{
+      const url=storageUrl(a.media_path), poster=storageUrl(a.poster_path);
+      const preview=a.media_type==="video"
+        ? `<video class="preview" src="${esc(url)}" ${poster?`poster="${esc(poster)}"`:""} controls preload="none"></video>`
+        : `<img class="preview" src="${esc(url)}" alt="">`;
+      const actualIndex=ads.findIndex(x=>x.id===a.id);
+      return `<div class="card" style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:15px;align-items:start">
+        <div>${preview}<span class="badge ${a.is_active?"green":"yellow"}">${a.is_active?"ACTIVE":"INACTIVE"}</span></div>
+        <div style="min-width:0"><h3 style="margin:0 0 6px;overflow-wrap:anywhere">${esc(a.title)}</h3>
+        <p style="color:#999;white-space:pre-wrap;overflow-wrap:anywhere">${esc(a.description||"No description")}</p>
+        <small style="color:#777">Type: ${esc(a.media_type)} · Order: ${Number(a.display_order)||0}</small>
+        <div class="toolbar" style="margin-top:12px">
+          <button class="secondary" type="button" onclick="tsEditCourseAd('${a.id}')">Edit</button>
+          <button class="secondary" type="button" onclick="tsMoveCourseAd('${a.id}',-1)" ${actualIndex<=0?"disabled":""}>↑ Move up</button>
+          <button class="secondary" type="button" onclick="tsMoveCourseAd('${a.id}',1)" ${actualIndex===ads.length-1?"disabled":""}>↓ Move down</button>
+          <button class="secondary" type="button" onclick="tsToggleCourseAd('${a.id}',${!a.is_active})">${a.is_active?"Deactivate":"Activate"}</button>
+          <button class="danger" type="button" onclick="tsDeleteCourseAd('${a.id}')">Delete</button>
+        </div></div></div>`;
+    }).join("");
+  };
+  window.tsResetCourseAdForm=function(){
+    $("tsCourseAdForm").reset();$("tsAdId").value="";$("tsAdExistingPath").value="";$("tsAdExistingPosterPath").value="";
+    $("tsAdOrder").value="0";$("tsAdFormHeading").textContent="नया Advertisement जोड़ें";
+    $("tsAdMedia").required=true;$("tsAdFormMsg").className="msg";$("tsAdFormMsg").textContent="";
+  };
+  window.tsEditCourseAd=function(id){
+    const a=ads.find(x=>x.id===id);if(!a)return;
+    $("tsAdId").value=a.id;$("tsAdExistingPath").value=a.media_path||"";$("tsAdExistingPosterPath").value=a.poster_path||"";
+    $("tsAdTitle").value=a.title||"";$("tsAdDescription").value=a.description||"";
+    $("tsAdCtaLabel").value=a.cta_label||"";$("tsAdCtaDestination").value=a.cta_destination||"";
+    $("tsAdOrder").value=Number(a.display_order)||0;$("tsAdActive").checked=!!a.is_active;
+    $("tsAdMedia").required=false;$("tsAdFormHeading").textContent="Advertisement Edit करें";
+    $("tsAdFormMsg").className="msg";$("tsAdFormMsg").textContent="";
+    $("tsAdTitle").scrollIntoView({behavior:"smooth",block:"center"});
+  };
+  window.tsToggleCourseAd=async function(id,active){
+    const {error}=await supabaseClient.from("course_advertisements").update({is_active:active}).eq("id",id);
+    if(error){if(typeof toast==="function")toast("Update failed: "+error.message);else alert(error.message);return}
+    await window.tsLoadCourseAds();
+  };
+  window.tsMoveCourseAd=async function(id,delta){
+    const index=ads.findIndex(a=>a.id===id), next=index+delta;
+    if(index<0||next<0||next>=ads.length)return;
+    const first=ads[index],second=ads[next];
+    const orderA=Number(first.display_order)||0,orderB=Number(second.display_order)||0;
+    const r1=await supabaseClient.from("course_advertisements").update({display_order:orderB}).eq("id",first.id);
+    if(r1.error){alert("Order update failed: "+r1.error.message);return}
+    const r2=await supabaseClient.from("course_advertisements").update({display_order:orderA}).eq("id",second.id);
+    if(r2.error){alert("Order update partially failed: "+r2.error.message);return}
+    await window.tsLoadCourseAds();
+  };
+  window.tsDeleteCourseAd=async function(id){
+    const a=ads.find(x=>x.id===id);if(!a)return;
+    if(!confirm(`"${a.title}" delete करना है? यह action वापस नहीं होगा।`))return;
+    const {error}=await supabaseClient.from("course_advertisements").delete().eq("id",id);
+    if(error){alert("Delete failed: "+error.message);return}
+    await removeStoragePath(a.media_path);if(a.poster_path)await removeStoragePath(a.poster_path);
+    await window.tsLoadCourseAds();
+  };
+  $("tsCourseAdForm")?.addEventListener("submit",async function(e){
+    e.preventDefault();
+    if(!currentUser||!currentAdmin){showFormMsg("पहले authorized admin के रूप में login करें।");return}
+    const submit=this.querySelector('button[type="submit"]');submit.disabled=true;
+    let uploadedMedia=null,uploadedPoster=null;
+    try{
+      const id=$("tsAdId").value||null, existing=ads.find(a=>a.id===id);
+      const mediaFile=$("tsAdMedia").files[0],posterFile=$("tsAdPoster").files[0];
+      if(!id&&!mediaFile)throw new Error("नई advertisement के लिए media file चुनें।");
+      let mediaPath=$("tsAdExistingPath").value||null,posterPath=$("tsAdExistingPosterPath").value||null;
+      if(mediaFile){uploadedMedia=await uploadFile(mediaFile,"media");mediaPath=uploadedMedia}
+      if(posterFile){uploadedPoster=await uploadFile(posterFile,"poster");posterPath=uploadedPoster}
+      const mediaType=mediaFile ? (mediaFile.type.startsWith("video/")?"video":"image") : (existing?.media_type||"image");
+      const payload={
+        title:$("tsAdTitle").value.trim(),
+        description:$("tsAdDescription").value.trim()||null,
+        media_type:mediaType,media_path:mediaPath,poster_path:posterPath,
+        cta_label:$("tsAdCtaLabel").value.trim()||null,
+        cta_destination:safeDestination($("tsAdCtaDestination").value),
+        is_active:$("tsAdActive").checked,
+        display_order:parseInt($("tsAdOrder").value,10)||0
+      };
+      if(!payload.title)throw new Error("Title भरना आवश्यक है।");
+      const result=id
+        ? await supabaseClient.from("course_advertisements").update(payload).eq("id",id).select().single()
+        : await supabaseClient.from("course_advertisements").insert(payload).select().single();
+      if(result.error)throw result.error;
+      if(existing&&uploadedMedia)await removeStoragePath(existing.media_path);
+      if(existing&&uploadedPoster)await removeStoragePath(existing.poster_path);
+      showFormMsg("Advertisement save हो गया।",true);
+      window.tsResetCourseAdForm();
+      await window.tsLoadCourseAds();
+      if(typeof toast==="function")toast("Course advertisement saved");
+    }catch(err){
+      if(uploadedMedia)await removeStoragePath(uploadedMedia);
+      if(uploadedPoster)await removeStoragePath(uploadedPoster);
+      showFormMsg(err.message||"Advertisement save नहीं हो पाया।");
+    }finally{submit.disabled=false}
+  });
+  document.addEventListener("DOMContentLoaded",()=>{if($("course-ads")?.classList.contains("active"))window.tsLoadCourseAds()});
+})();
+</script>
+
+</body>
+</html>
